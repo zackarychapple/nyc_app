@@ -19,57 +19,61 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        FRONTEND (React)                             │
-│                  Hosted on AWS Amplify + Route 53                   │
+│                        FRONTEND (React + CRA)                       │
+│              Hosted on AWS Amplify (Static) + Route 53              │
 │                       dbxdemonyc.com                                │
+│                   App ID: dx7u5ga7qr7e7                             │
 │                                                                     │
 │  ┌──────────────┐   ┌──────────────────┐   ┌────────────────────┐  │
 │  │  Registration │   │  Dashboard Tab   │   │  Dashboard Tab     │  │
-│  │  Flow (Home)  │   │  (Kepler Map)    │   │  (Embedded DBSQL)  │  │
+│  │  Flow (Home)  │   │  (Leaflet Map +  │   │  (Embedded DBSQL   │  │
+│  │  4-step wizard│   │   recharts)      │   │  via AIBI SDK)     │  │
 │  └──────┬───────┘   └────────┬─────────┘   └────────┬───────────┘  │
 │         │                    │                       │              │
 └─────────┼────────────────────┼───────────────────────┼──────────────┘
-          │ writes             │ reads                 │ iframe
+          │ POST               │ GET                   │ SP token
           ▼                    ▼                       ▼
 ┌─────────────────────────────────────────────────────────────────────┐
+│              BACKEND (Express.js on Amplify WEB_COMPUTE)            │
+│                   App ID: d1erxf8q87xlvj                            │
+│                                                                     │
+│  Endpoints:                                                         │
+│  ├── POST /registrations    → write to LakeBase                     │
+│  ├── GET  /registrations    → read all (for map + charts)           │
+│  ├── GET  /dashboard-token  → mint SP OAuth token for embed         │
+│  └── GET  /health           → DB connectivity check                 │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │ Postgres (DATABASE_URL)
+                           ▼
+┌─────────────────────────────────────────────────────────────────────┐
 │                     LAKEBASE (Managed Postgres)                     │
+│  Project: nyc-demo (Autoscaling)                                    │
+│  Host: ep-ancient-bread-d15lax3a.database.us-west-2.cloud.db.com   │
 │                                                                     │
 │  Table: event_registrations                                         │
 │  ┌──────────────────────────────────────────────────────────────┐   │
 │  │ user_id | borough | neighborhood | state | reason | ts      │   │
 │  └──────────────────────────────────────────────────────────────┘   │
-│                                                                     │
-│  Table: topic_analysis (written back from Databricks ML)            │
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │ topic_label | topic_count | top_words | updated_at           │   │
-│  └──────────────────────────────────────────────────────────────┘   │
 └──────────────────────────┬──────────────────────────────────────────┘
                            │
               ┌────────────┴────────────┐
-              │  Bi-Directional Sync    │
-              │  (LakeBase ↔ UC/Delta)  │
-              ▼                         ▼
+              │  Registered in UC as    │
+              │  nyc_demo_lakebase      │
+              ▼                         │
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    DATABRICKS LAKEHOUSE                              │
+│  Workspace: dbc-eca83c32-b44b.cloud.databricks.com                  │
 │                                                                     │
-│  Unity Catalog:                                                     │
-│  ├── Forward: LakeBase catalog registered in UC (read-only)         │
-│  │   └── Federated queries / Streaming table from LakeBase          │
-│  │       → event_registrations available as Delta/streaming table   │
+│  ├── AI/BI Dashboard (Lakeview)                                     │
+│  │   ID: 01f1103d19bc175083fbb5392f987e10                           │
+│  │   → Queries nyc_demo_lakebase.public.event_registrations         │
+│  │   → Embedded in frontend via @databricks/aibi-client SDK         │
+│  │   → Auth: Service Principal (nyc-demo-dashboard-embed)           │
 │  │                                                                  │
-│  ├── Streaming NLP Job (Databricks Job / Structured Streaming)      │
-│  │   → Reads event_registrations from UC                            │
-│  │   → Runs ML classification on `reason` text                     │
-│  │   → Writes results to topic_analysis Delta table                 │
+│  ├── (P2) Streaming NLP Job                                         │
+│  │   → Classify `reason` text into topics                           │
 │  │                                                                  │
-│  ├── Reverse Sync (Synced Table):                                   │
-│  │   → topic_analysis Delta table → LakeBase Postgres               │
-│  │   → Mode: CONTINUOUS (15s min refresh)                           │
-│  │                                                                  │
-│  └── AI/BI Dashboard (Databricks SQL)                               │
-│      → Bar chart: "Reasons people are attending"                    │
-│      → Reads from UC tables (federated or synced)                   │
-│      → Embedded via iframe in frontend                              │
+│  └── (P2) Synced Table: topic_analysis → LakeBase                   │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -88,16 +92,26 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 | 7 | AWS Amplify app ID & branch | ✅ DONE | App ID: `dx7u5ga7qr7e7`, Branch: `main`, appRoot: `frontend` |
 | 8 | Route 53 hosted zone for dbxdemonyc.com | ✅ DONE | Zone ID: `Z0539934378OSJQUTTXIA` |
 | 9 | GitHub repo URL | ✅ DONE | `https://github.com/jneil17/nyc_app` (public) |
-| 10 | Databricks PAT or OAuth config for API calls | ⬜ TODO | `__DATABRICKS_TOKEN__` |
-| 11 | LakeBase → UC: Using registered catalog + streaming table, OR Lakehouse Federation? | ⬜ TODO | (see notes below) |
-| 12 | NLP model choice (LDA, zero-shot classifier, etc.) | ⬜ TODO | TBD after testing |
+| 10 | Databricks auth for dashboard embed | ✅ DONE | Service Principal `nyc-demo-dashboard-embed` (App ID: `4ae0de5c-dc08-49e8-9491-30ae1e81ecbd`). OAuth client credentials flow via `/dashboard-token` endpoint. |
+| 11 | LakeBase → UC: Using registered catalog + streaming table, OR Lakehouse Federation? | ✅ DONE | Registered LakeBase as UC catalog `nyc_demo_lakebase`. Dashboard queries federated directly. |
+| 12 | NLP model choice (LDA, zero-shot classifier, etc.) | ⬜ TODO (P2) | TBD after MVP is live |
+| 13 | Backend hosting (publicly accessible) | ✅ DONE | Amplify WEB_COMPUTE app `d1erxf8q87xlvj`. NOT Databricks Apps (requires auth). |
+| 14 | LakeBase native PG role (for production DATABASE_URL) | ✅ DONE | Role: `nyc_app`, password-based auth via DATABASE_URL |
 
 ### AWS Details
 - **Account:** `637423476933`
 - **IAM User:** `jneil_developer` (has `ClaudeCodeDemoAccess` policy: Amplify, Route53, IAM read-only)
-- **Amplify default domain:** `dx7u5ga7qr7e7.amplifyapp.com`
-- **Custom domain:** `dbxdemonyc.com` — DNS configured, `www` verified, root domain pending propagation
-- **Amplify build spec:** builds React app from `frontend/` (`npm ci` → `npm run build` → serves `build/`)
+- **Region:** `us-east-1` (all Amplify resources)
+- **Frontend Amplify App:** `dx7u5ga7qr7e7` (Static, `appRoot: frontend`)
+  - Default domain: `dx7u5ga7qr7e7.amplifyapp.com`
+  - Custom domain: `dbxdemonyc.com`
+  - Build: `npm install` → `npm run build` → serves `build/`
+  - Env var needed: `REACT_APP_API_URL` → set to backend URL once deployed
+- **Backend Amplify App:** `d1erxf8q87xlvj` (WEB_COMPUTE, `appRoot: backend`)
+  - Default domain: `d1erxf8q87xlvj.amplifyapp.com`
+  - Env vars set: `DATABASE_URL`
+  - Env vars needed: `DATABRICKS_WORKSPACE_URL`, `DATABRICKS_SP_CLIENT_ID`, `DATABRICKS_SP_CLIENT_SECRET`
+  - **STATUS: DEPLOY PENDING** — last build failed (buildspec `cd backend` issue, see Deployment section)
 
 ### Databricks Details
 - **Workspace:** `https://dbc-eca83c32-b44b.cloud.databricks.com/`
@@ -126,33 +140,102 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 ### Databricks AI/BI Dashboard (Lakeview)
 - **Dashboard ID:** `01f1103d19bc175083fbb5392f987e10`
 - **Display Name:** "NYC Event - Live Registrations"
-- **Path:** `/Users/jwneil17@gmail.com/NYC Event - Live Registrations.lvdash.json`
+- **Workspace ID:** `3590757798436003`
 - **Warehouse:** `00561e6c134511ad` (Serverless Starter Warehouse)
-- **Published:** Yes (with embedded credentials)
+- **Published:** Yes
 - **Dashboard URL:** `https://dbc-eca83c32-b44b.cloud.databricks.com/dashboardsv3/01f1103d19bc175083fbb5392f987e10`
-- **Embed URL:** `https://dbc-eca83c32-b44b.cloud.databricks.com/embed/dashboardsv3/01f1103d19bc175083fbb5392f987e10`
-- **Widgets:**
-  - Counter: Total Registrations
-  - Pie Chart: Where Are Attendees From? (NYC/NY State/Other — lava color mapped)
-  - Area Chart: Registration Activity over time
-  - Bar Chart: Registrations by Borough (sorted descending)
-  - Table: Recent Responses (location, reason, time — last 20)
+- **Widgets:** Counter (total), Pie (location type), Area (activity over time), Bar (by borough), Table (recent responses)
 - **Data Source:** All queries hit `nyc_demo_lakebase.public.event_registrations` (federated from LakeBase)
-- **Note:** Dashboard needs the embed URL set as `REACT_APP_DASHBOARD_EMBED_URL` in the frontend env to appear in the app
+- **Embed method:** `@databricks/aibi-client` SDK in `EmbeddedDashboard.jsx` — fetches SP token from backend `GET /dashboard-token`, then renders natively in the React app (no iframe)
 
-### Backend API (DONE)
+### Service Principal (Dashboard Embed Auth)
+- **Name:** `nyc-demo-dashboard-embed`
+- **Application ID:** `4ae0de5c-dc08-49e8-9491-30ae1e81ecbd`
+- **SP ID:** `76983484699022`
+- **Secret expires:** 2028-02-22
+- **Permissions granted:**
+  - `CAN_USE` on SQL warehouse `00561e6c134511ad`
+  - `CAN_READ` on dashboard `01f1103d19bc175083fbb5392f987e10`
+  - `USE CATALOG` on `nyc_demo_lakebase`
+  - `USE SCHEMA` on `nyc_demo_lakebase.public`
+  - `SELECT` on `nyc_demo_lakebase.public.event_registrations`
+- **Token flow:** Backend calls `POST https://dbc-eca83c32-b44b.cloud.databricks.com/oidc/v1/token` with client credentials → returns 1hr access token → frontend uses it with AIBI SDK
+- **Verified working:** SP can query LakeBase data and access the dashboard
+
+### Backend API (Code DONE, Deployment PENDING)
 - **Location:** `backend/` directory
-- **Stack:** Express.js + pg (node-postgres) with OAuth token auto-refresh
-- **Port:** 3001
+- **Stack:** Express.js + pg (node-postgres)
+- **Port:** 3001 (local), auto-assigned on Amplify
 - **Endpoints:**
   - `GET /health` — DB health check
   - `POST /registrations` — insert new registration
   - `GET /registrations` — fetch all registrations (for dashboard polling)
-  - `GET /registrations/stats` — aggregated borough/neighborhood counts (for map)
+  - `GET /registrations/stats` — aggregated borough/neighborhood counts
   - `GET /topics` — fetch topic analysis (from NLP pipeline)
-- **Config:** reads from `backend/.env` — set `LAKEBASE_AUTH=oauth` to use Databricks CLI for token refresh
-- **Run locally:** `cd backend && npm install && npm run dev`
-- **Frontend integration:** set `REACT_APP_API_URL=http://localhost:3001` in frontend `.env`
+  - `GET /dashboard-token` — mint SP OAuth token for embedded dashboard
+- **DB connection:** `DATABASE_URL` env var (native PG role `nyc_app` with password) OR `LAKEBASE_AUTH=oauth` for local dev with Databricks CLI
+- **CORS:** Allows `dbxdemonyc.com`, `www.dbxdemonyc.com`, `dx7u5ga7qr7e7.amplifyapp.com`, `localhost:3000`
+- **Run locally:** `cd backend && npm install && node server.js`
+- **Frontend integration:** set `REACT_APP_API_URL=http://localhost:3001` for local dev
+
+### Backend Deployment (BLOCKER — must complete for demo)
+
+**Target:** Amplify WEB_COMPUTE app `d1erxf8q87xlvj` (publicly accessible, no auth)
+
+**Why NOT Databricks Apps:** Databricks Apps require authentication (302 → login page). Public visitors can't access them.
+
+**Last build failed (Job #2):** The buildspec had `cd backend` commands, but since `appRoot: backend` is set, the build already runs from `backend/`. Fix: remove the `cd backend` from buildspec commands.
+
+**Correct buildspec for backend Amplify app:**
+```yaml
+version: 1
+applications:
+  - appRoot: backend
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - mkdir -p .amplify-hosting/compute/default
+            - cp server.js db.js package.json package-lock.json .amplify-hosting/compute/default/
+            - cd .amplify-hosting/compute/default && npm ci --production
+            - mkdir -p .amplify-hosting/static
+            - |
+              cat > .amplify-hosting/deploy-manifest.json << 'EOF'
+              {
+                "version": 1,
+                "routes": [
+                  { "path": "/*", "target": { "kind": "Compute", "src": "default" } }
+                ],
+                "computeResources": [
+                  { "name": "default", "entrypoint": "server.js", "runtime": "nodejs18.x" }
+                ],
+                "framework": { "name": "express", "version": "4.21.2" }
+              }
+              EOF
+      artifacts:
+        baseDirectory: .amplify-hosting
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+```
+
+**Env vars needed on backend Amplify app (`d1erxf8q87xlvj`):**
+```
+DATABASE_URL=postgresql://nyc_app:<password>@ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com/databricks_postgres?sslmode=require
+DATABRICKS_WORKSPACE_URL=https://dbc-eca83c32-b44b.cloud.databricks.com
+DATABRICKS_SP_CLIENT_ID=4ae0de5c-dc08-49e8-9491-30ae1e81ecbd
+DATABRICKS_SP_CLIENT_SECRET=<SP_SECRET_IN_BACKEND_ENV>
+```
+
+**After backend deploys:**
+1. Set `REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com` on frontend Amplify app (`dx7u5ga7qr7e7`)
+2. Trigger frontend rebuild
+3. Test end-to-end: registration → LakeBase → dashboard charts + map
 
 ### Important Note on Bi-Directional Sync
 
@@ -171,27 +254,24 @@ For the **reverse direction** (Delta → LakeBase Postgres), use **Synced Tables
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Frontend | React (via ai-dev-kit) | Single-page app, 2 tabs |
-| Mapping | Kepler.gl (React) | Choropleth of NYC boroughs/neighborhoods |
-| Dashboard | Databricks AI/BI Dashboard | Embedded iframe for bar chart |
-| Hosting | AWS Amplify + Route 53 | dbxdemonyc.com |
-| Backend DB | LakeBase (Managed Postgres) | Primary data store |
-| API Layer | Direct Postgres connection from frontend OR lightweight API | See decision below |
-| Data Platform | Databricks (Unity Catalog, SQL Warehouse, Jobs) | Analytics + ML |
-| Sync (Delta → PG) | Synced Tables (Continuous) | ~15s refresh |
-| Sync (PG → Delta) | Registered UC Catalog + Streaming Table | Near real-time |
-| ML/NLP | Databricks Streaming Job | Model TBD |
-| IaC / Dev Tooling | Databricks ai-dev-kit | Claude Code skills for Databricks resources |
+| Frontend | React (CRA) + Tailwind CDN | Single-page app, 2 tabs (/ and /dashboard) |
+| Mapping | react-leaflet + CARTO tiles | Borough-level choropleth with GeoJSON overlay |
+| Charts | recharts | Borough bar chart, location pie chart, responses table |
+| Dashboard Embed | @databricks/aibi-client SDK | Embeds Lakeview dashboard via SP token |
+| Frontend Hosting | AWS Amplify (Static) + Route 53 | `dx7u5ga7qr7e7`, dbxdemonyc.com |
+| Backend | Express.js (Node.js) | REST API proxying to LakeBase Postgres |
+| Backend Hosting | AWS Amplify (WEB_COMPUTE) | `d1erxf8q87xlvj` — publicly accessible, no auth wall |
+| Backend DB | LakeBase (Managed Postgres, Autoscaling) | Primary data store |
+| Data Platform | Databricks (Unity Catalog, SQL Warehouse) | Analytics + embedded dashboard |
+| Auth for Embed | Service Principal (OAuth client credentials) | SP: `nyc-demo-dashboard-embed` |
 
-### API Layer Decision
+### API Layer Decision (RESOLVED)
 
-The frontend needs to read/write to LakeBase Postgres. Options:
+**Decision: Express.js backend on Amplify WEB_COMPUTE** (`d1erxf8q87xlvj`).
 
-1. **LakeBase Data API (PostgREST-compatible REST)** — if available on provisioned instance, this is the simplest. Frontend calls REST endpoints directly. No backend server needed.
-2. **Lightweight Express/FastAPI backend** — deployed on Amplify or as a Databricks App. Proxies requests to Postgres.
-3. **Databricks Apps** — deploy a small backend app on Databricks that connects to LakeBase natively.
+Why NOT Databricks Apps: Databricks Apps require authentication (302 redirect to login). Public visitors at dbxdemonyc.com won't be authenticated, so the backend must be publicly accessible. Amplify WEB_COMPUTE gives us a serverless Node.js backend with no auth wall.
 
-**Recommendation:** Use option 1 (Data API) if available. Otherwise option 2 (lightweight Node.js API deployed alongside the React app on Amplify).
+The backend connects to LakeBase via `DATABASE_URL` (native PG role with password) and mints SP OAuth tokens for the embedded dashboard.
 
 ### Frontend API Contract (for backend developer)
 
@@ -254,7 +334,10 @@ nyc_app/
 │   │   │   │   ├── ReasonInput.jsx         # Step 3: Free-text textarea (10-500 chars)
 │   │   │   │   └── Confirmation.jsx        # Step 4: Success + link to dashboard
 │   │   │   ├── Dashboard/
-│   │   │   │   └── DashboardPage.jsx       # Placeholder: map area + dashboard iframe area
+│   │   │   │   ├── DashboardPage.jsx       # Full dashboard: stats + map + charts + embed
+│   │   │   │   ├── NYCMap.jsx              # react-leaflet borough choropleth
+│   │   │   │   ├── RegistrationCharts.jsx  # recharts: BoroughChart, LocationPieChart, RecentResponsesTable
+│   │   │   │   └── EmbeddedDashboard.jsx   # @databricks/aibi-client SDK embed
 │   │   │   └── common/
 │   │   │       └── Header.jsx              # Nav bar with Register/Dashboard tabs
 │   │   ├── data/
@@ -262,10 +345,11 @@ nyc_app/
 │   │   │   └── us-states.json              # ✅ 50 states + DC
 │   │   └── services/
 │   │       └── api.js                      # ✅ API client (see Frontend API Contract below)
-├── backend/                           # ⬜ TODO — lightweight API proxy
+├── backend/                           # ✅ BUILT — Express.js API
 │   ├── package.json
-│   ├── server.js                      # Express server
-│   └── db.js                          # Postgres connection pool (pg library)
+│   ├── server.js                      # Express server (registrations + dashboard-token + CORS)
+│   ├── db.js                          # Postgres pool (DATABASE_URL or OAuth)
+│   └── .env                           # Local env (not committed)
 ├── databricks/                        # ⬜ TODO
 │   ├── setup/
 │   │   ├── 01_create_lakebase_tables.sql
@@ -410,21 +494,29 @@ A clean, step-by-step registration wizard. No authentication required. Each user
 
 ### Tab 2: Live Dashboard (`/dashboard`)
 
-Split layout:
+Full dashboard layout (top to bottom):
 
-#### Top Section: Kepler.gl Choropleth Map
-- **Map type:** Choropleth of NYC neighborhoods/boroughs
-- **Color intensity:** Number of registrations from each area (more red = more people)
-- **Tooltip on hover:** Neighborhood name, count, top topic (if NLP results available)
-- **GeoJSON source:** NYC OpenData NTA boundaries
-- **Auto-refresh:** Poll LakeBase every 10 seconds for updated registration counts
-- **Fallback:** If no NLP data yet, just show registration density
+#### Stats Bar (3 counters)
+- Total Registered | From NYC | Boroughs Represented
 
-#### Bottom Section: Embedded Databricks AI/BI Dashboard
-- **Content:** Bar chart showing "Top Reasons for Attending" (topic distribution)
-- **Embed method:** Databricks Dashboard embed URL in an iframe
-- **Dashboard queries from:** Unity Catalog tables (either federated from LakeBase catalog or from the Delta streaming table)
-- **Auto-refresh:** Handled by Databricks dashboard refresh settings
+#### NYC Registration Map (react-leaflet)
+- **Map type:** Borough-level choropleth using CARTO light basemap
+- **GeoJSON:** `public/nyc_boroughs.geojson` (from ArcGIS, simplified)
+- **Color scale:** Lava gradient (oat → #FFD4CC → #FF7A5C → #FF5F46 → #FF3621)
+- **Tooltip on hover:** Borough name + registration count
+- **Auto-refresh:** Polls `/registrations` every 10 seconds
+
+#### Charts Row (2-column grid, recharts)
+- **Left:** Bar chart — Registrations by Borough (sorted descending, lava colors)
+- **Right:** Donut chart — Where Are Attendees From? (NYC / NY State / Other State)
+
+#### Embedded Databricks AI/BI Dashboard
+- **SDK:** `@databricks/aibi-client` (not iframe)
+- **Auth:** Fetches SP token from backend `GET /dashboard-token`
+- **Fallback:** Shows placeholder if backend not available
+
+#### Recent Responses Table
+- Last 10 responses with Location + Reason columns
 
 ---
 
@@ -522,28 +614,30 @@ synced = w.database.create_synced_database_table(
 
 ## Environment Variables
 
+### Backend (`backend/.env` for local, Amplify env vars for production)
 ```env
-# .env.example
+# Option A: CONNECTION STRING (production — Amplify WEB_COMPUTE)
+DATABASE_URL=postgresql://nyc_app:<password>@ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com/databricks_postgres?sslmode=require
 
-# LakeBase Postgres
-LAKEBASE_HOST=__LAKEBASE_HOST__
+# Option B: INDIVIDUAL VARS (local dev with Databricks OAuth)
+LAKEBASE_HOST=ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com
 LAKEBASE_PORT=5432
-LAKEBASE_DB=__LAKEBASE_DB__
-LAKEBASE_USER=__LAKEBASE_USER__
-LAKEBASE_PASSWORD=__LAKEBASE_PASSWORD__
-LAKEBASE_SSL=true
+LAKEBASE_DB=databricks_postgres
+LAKEBASE_USER=jwneil17@gmail.com
+LAKEBASE_AUTH=oauth
+DATABRICKS_PROFILE=dbc-eca83c32-b44b
 
-# Databricks
-DATABRICKS_WORKSPACE_URL=__DATABRICKS_WORKSPACE_URL__
-DATABRICKS_TOKEN=__DATABRICKS_TOKEN__
-SQL_WAREHOUSE_ID=__SQL_WAREHOUSE_ID__
+# Service Principal for dashboard embed (both local + production)
+DATABRICKS_WORKSPACE_URL=https://dbc-eca83c32-b44b.cloud.databricks.com
+DATABRICKS_SP_CLIENT_ID=4ae0de5c-dc08-49e8-9491-30ae1e81ecbd
+DATABRICKS_SP_CLIENT_SECRET=<SP_SECRET_IN_BACKEND_ENV>
 
-# Dashboard Embed
-DASHBOARD_EMBED_URL=__DASHBOARD_EMBED_URL__
+PORT=3001
+```
 
-# App
-REACT_APP_API_URL=__API_BASE_URL__
-REACT_APP_DASHBOARD_EMBED_URL=__DASHBOARD_EMBED_URL__
+### Frontend (Amplify env vars — baked into build)
+```env
+REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com  # Set once backend is deployed
 ```
 
 ---
@@ -551,27 +645,28 @@ REACT_APP_DASHBOARD_EMBED_URL=__DASHBOARD_EMBED_URL__
 ## Priority / Build Order
 
 ### P0 — Must Have for Thursday (MVP)
-1. ✅ **DONE** Frontend registration flow (borough → neighborhood → reason → submit) — live at dbxdemonyc.com
-2. ✅ **DONE** LakeBase table creation + backend API (Express.js + OAuth) — `backend/`
-3. ✅ **DONE** Registration data visible in LakeBase / queryable
-4. ✅ **DONE** Dashboard tab with react-leaflet choropleth map (borough-level, lava color scale, auto-refresh 10s)
-5. ✅ **DONE** Databricks AI/BI Dashboard (Lakeview) — created via API, queries LakeBase UC catalog, published for embedding
+1. ✅ **DONE** Frontend registration flow (4-step wizard) — live at dbxdemonyc.com
+2. ✅ **DONE** LakeBase table creation + backend API (Express.js) — `backend/`
+3. ✅ **DONE** Registration data visible in LakeBase / queryable (verified locally)
+4. ✅ **DONE** Dashboard tab with react-leaflet choropleth map + recharts charts + auto-refresh 10s
+5. ✅ **DONE** Databricks AI/BI Dashboard (Lakeview) created + AIBI SDK embed component
+6. ✅ **DONE** Service Principal for public dashboard embedding
+7. ✅ **DONE** Register LakeBase in UC — catalog `nyc_demo_lakebase`
+8. **🔴 BLOCKER** Deploy backend to Amplify WEB_COMPUTE (`d1erxf8q87xlvj`) — fix buildspec, add SP env vars
+9. **🔴 BLOCKER** Set `REACT_APP_API_URL` on frontend Amplify + rebuild — depends on #8
 
 ### P1 — Should Have (makes demo impressive)
-6. ✅ **DONE** Register LakeBase in UC — catalog `nyc_demo_lakebase`
-7. ⬜ Synced Table back to Postgres (needed once NLP pipeline is built)
-8. ✅ **DONE** Real-time auto-refresh on map (polling every 10s)
-9. ⬜ Demo reset script
+10. ⬜ Demo reset script (TRUNCATE + seed 5-10 fake registrations)
+11. ⬜ Seed data script with realistic fake data for testing
 
 ### P2 — Nice to Have (NLP pipeline)
-10. ⬜ Streaming NLP job classifying reasons into topics
-11. ⬜ Topic-colored choropleth (color by topic, not just density)
-12. ⬜ Per-registration topic assignments synced back
+12. ⬜ Streaming NLP job classifying reasons into topics
+13. ⬜ Synced Table: topic_analysis Delta → LakeBase
+14. ⬜ Topic-colored choropleth (color by topic, not just density)
 
 ### P3 — Polish
-13. ⬜ Seed data script with realistic fake data
-14. ⬜ Teardown script
-15. ⬜ Comprehensive README for reproducibility
+15. ⬜ Teardown script
+16. ⬜ Comprehensive README for reproducibility
 
 ---
 
@@ -607,17 +702,21 @@ conn.close()
 
 ## Key Design Decisions
 
-1. **Frontend-first architecture:** The React app is the primary interface. It talks directly to LakeBase (via Data API or a thin backend). Databricks handles the analytics layer behind the scenes.
+1. **Frontend-first architecture:** React app is the primary interface. Express.js backend proxies to LakeBase. Databricks handles analytics + embedded dashboard.
 
-2. **UUID generation is client-side:** `crypto.randomUUID()` — no auth, no login, just session-based. Simple for a demo.
+2. **UUID generation is client-side:** `crypto.randomUUID()` — no auth, no login. Simple for a demo.
 
-3. **Kepler.gl for the map, NOT Databricks Dashboard for the map:** Kepler gives us a beautiful, interactive choropleth directly in the React app. The Databricks Dashboard is only used for the bar chart (embedded via iframe) since the goal is to show the Databricks Dashboard product.
+3. **react-leaflet for the map (not Kepler.gl):** Kepler.gl had peer dependency conflicts with React 19 (react-palm, enzyme). react-leaflet is lightweight, no API key needed, no Redux dependency.
 
-4. **Polling, not WebSockets:** For <100 users, polling every 10 seconds is perfectly fine and much simpler. The frontend polls LakeBase for updated registration counts and re-renders the Kepler map.
+4. **recharts + AIBI SDK (not iframe):** Recharts provides immediate visualization from our API data (no Databricks auth needed). The `@databricks/aibi-client` SDK embeds the native Databricks dashboard using a service principal token — better UX than an iframe.
 
-5. **NLP is decoupled:** The NLP streaming job is a separate concern. The demo works without it (just shows raw text in the bar chart). When it's ready, it enhances the experience but isn't blocking.
+5. **Amplify WEB_COMPUTE for backend (not Databricks Apps):** Databricks Apps require authentication (302 → login). Public visitors at dbxdemonyc.com need unauthenticated access. Amplify WEB_COMPUTE is serverless, public, and simple.
 
-6. **Everything in git for reproducibility:** Setup scripts, DDL, job definitions — all committed so others can fork and recreate.
+6. **Service Principal for dashboard embed:** Dedicated SP (`nyc-demo-dashboard-embed`) with minimal permissions. Backend mints tokens via OAuth client credentials flow. Tokens are cached and auto-refreshed.
+
+7. **Polling, not WebSockets:** For <100 users, polling every 10 seconds is perfectly fine and much simpler.
+
+8. **NLP is decoupled (P2):** The demo works without it. Recharts shows data from the API directly. When NLP is ready, it enhances the experience but isn't blocking.
 
 ---
 
