@@ -79,12 +79,12 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 
 | # | Question | Status | Value |
 |---|----------|--------|-------|
-| 1 | LakeBase instance name & connection string | ⬜ TODO | `__LAKEBASE_HOST__`, `__LAKEBASE_PORT__`, `__LAKEBASE_DB__` |
-| 2 | LakeBase credentials (user/password or service principal) | ⬜ TODO | `__LAKEBASE_USER__`, `__LAKEBASE_PASSWORD__` |
+| 1 | LakeBase instance name & connection string | ✅ DONE | Autoscaling project: `nyc-demo`, Host: `ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com`, Port: `5432`, DB: `databricks_postgres` |
+| 2 | LakeBase credentials (user/password or service principal) | ✅ DONE | Databricks OAuth via CLI profile `dbc-eca83c32-b44b`, user: `jwneil17@gmail.com`. Backend auto-refreshes tokens. |
 | 3 | Databricks workspace URL | ✅ DONE | `https://dbc-eca83c32-b44b.cloud.databricks.com/` |
-| 4 | Databricks SQL Warehouse ID (for dashboard) | ⬜ TODO | `__SQL_WAREHOUSE_ID__` |
-| 5 | Unity Catalog: catalog name for LakeBase registration | ⬜ TODO | `__UC_CATALOG__` |
-| 6 | Unity Catalog: catalog/schema for Delta tables (NLP output) | ⬜ TODO | `__UC_ANALYTICS_CATALOG__`.`__UC_ANALYTICS_SCHEMA__` |
+| 4 | Databricks SQL Warehouse ID (for dashboard) | ✅ DONE | `00561e6c134511ad` (Serverless Starter Warehouse, auto-stop 10min) |
+| 5 | Unity Catalog: catalog name for LakeBase registration | ✅ DONE | `nyc_demo_lakebase` (type: MANAGED_ONLINE_CATALOG, registered via API with project UID + branch UID) |
+| 6 | Unity Catalog: catalog/schema for Delta tables (NLP output) | ⬜ TODO | `__UC_ANALYTICS_CATALOG__`.`__UC_ANALYTICS_SCHEMA__` (needed once NLP pipeline is built) |
 | 7 | AWS Amplify app ID & branch | ✅ DONE | App ID: `dx7u5ga7qr7e7`, Branch: `main`, appRoot: `frontend` |
 | 8 | Route 53 hosted zone for dbxdemonyc.com | ✅ DONE | Zone ID: `Z0539934378OSJQUTTXIA` |
 | 9 | GitHub repo URL | ✅ DONE | `https://github.com/jneil17/nyc_app` (public) |
@@ -103,6 +103,39 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 - **Workspace:** `https://dbc-eca83c32-b44b.cloud.databricks.com/`
 - **CLI Profile:** `dbc-eca83c32-b44b` (SSO auth)
 - **Admin user:** John Neil (`jwneil17@gmail.com`)
+
+### LakeBase Details (Autoscaling Tier)
+- **Project:** `nyc-demo` (UID: `19c5d4b9-ccd7-48af-8c19-f9c3f0163e5f`)
+- **Branch:** `production` (UID: `br-old-salad-d171gst3`, default, no expiry)
+- **Endpoint:** `primary` (UID: `ep-ancient-bread-d15lax3a`, read-write, 1 CU autoscaling)
+- **Host:** `ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com`
+- **Port:** `5432`
+- **Database:** `databricks_postgres` (default for Autoscaling tier)
+- **PG Version:** 17
+- **Auth:** Databricks OAuth (via CLI profile `dbc-eca83c32-b44b`)
+- **Status:** ACTIVE, tables created, tested and working
+- **CLI commands:** Use `databricks postgres` (not `databricks database`)
+- **Table:** `event_registrations` — created with indexes on `borough` and `created_at`
+- **Connect via psql:**
+  ```bash
+  export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+  TOKEN=$(databricks auth token -p dbc-eca83c32-b44b | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+  PGPASSWORD="$TOKEN" psql "host=ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com port=5432 dbname=databricks_postgres user=jwneil17@gmail.com sslmode=require"
+  ```
+
+### Backend API (DONE)
+- **Location:** `backend/` directory
+- **Stack:** Express.js + pg (node-postgres) with OAuth token auto-refresh
+- **Port:** 3001
+- **Endpoints:**
+  - `GET /health` — DB health check
+  - `POST /registrations` — insert new registration
+  - `GET /registrations` — fetch all registrations (for dashboard polling)
+  - `GET /registrations/stats` — aggregated borough/neighborhood counts (for map)
+  - `GET /topics` — fetch topic analysis (from NLP pipeline)
+- **Config:** reads from `backend/.env` — set `LAKEBASE_AUTH=oauth` to use Databricks CLI for token refresh
+- **Run locally:** `cd backend && npm install && npm run dev`
+- **Frontend integration:** set `REACT_APP_API_URL=http://localhost:3001` in frontend `.env`
 
 ### Important Note on Bi-Directional Sync
 
@@ -501,16 +534,16 @@ REACT_APP_DASHBOARD_EMBED_URL=__DASHBOARD_EMBED_URL__
 ## Priority / Build Order
 
 ### P0 — Must Have for Thursday (MVP)
-1. ✅ **DONE** Frontend registration flow (borough → neighborhood → reason → submit)
-2. ⬜ LakeBase table creation + API to write registrations
-3. ⬜ Registration data visible in LakeBase / queryable
-4. ⬜ Basic dashboard tab with Kepler choropleth map (registration density) — placeholder built, needs Kepler.gl + data
-5. ⬜ Embedded Databricks Dashboard (bar chart of reasons) — placeholder built, needs embed URL
+1. ✅ **DONE** Frontend registration flow (borough → neighborhood → reason → submit) — live at dbxdemonyc.com
+2. ✅ **DONE** LakeBase table creation + backend API (Express.js + OAuth) — `backend/`
+3. ✅ **DONE** Registration data visible in LakeBase / queryable
+4. ✅ **DONE** Dashboard tab with react-leaflet choropleth map (borough-level, lava color scale, auto-refresh 10s)
+5. 🔄 **IN PROGRESS** Databricks AI/BI Dashboard (Lakeview) — creating via API, will query LakeBase UC catalog, embed in frontend
 
 ### P1 — Should Have (makes demo impressive)
-6. ⬜ Register LakeBase in UC + streaming table
-7. ⬜ Synced Table back to Postgres
-8. ⬜ Real-time auto-refresh on map (polling every 10s)
+6. ✅ **DONE** Register LakeBase in UC — catalog `nyc_demo_lakebase`
+7. ⬜ Synced Table back to Postgres (needed once NLP pipeline is built)
+8. ✅ **DONE** Real-time auto-refresh on map (polling every 10s)
 9. ⬜ Demo reset script
 
 ### P2 — Nice to Have (NLP pipeline)
