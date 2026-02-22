@@ -123,6 +123,23 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
   PGPASSWORD="$TOKEN" psql "host=ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com port=5432 dbname=databricks_postgres user=jwneil17@gmail.com sslmode=require"
   ```
 
+### Databricks AI/BI Dashboard (Lakeview)
+- **Dashboard ID:** `01f1103d19bc175083fbb5392f987e10`
+- **Display Name:** "NYC Event - Live Registrations"
+- **Path:** `/Users/jwneil17@gmail.com/NYC Event - Live Registrations.lvdash.json`
+- **Warehouse:** `00561e6c134511ad` (Serverless Starter Warehouse)
+- **Published:** Yes (with embedded credentials)
+- **Dashboard URL:** `https://dbc-eca83c32-b44b.cloud.databricks.com/dashboardsv3/01f1103d19bc175083fbb5392f987e10`
+- **Embed URL:** `https://dbc-eca83c32-b44b.cloud.databricks.com/embed/dashboardsv3/01f1103d19bc175083fbb5392f987e10`
+- **Widgets:**
+  - Counter: Total Registrations
+  - Pie Chart: Where Are Attendees From? (NYC/NY State/Other — lava color mapped)
+  - Area Chart: Registration Activity over time
+  - Bar Chart: Registrations by Borough (sorted descending)
+  - Table: Recent Responses (location, reason, time — last 20)
+- **Data Source:** All queries hit `nyc_demo_lakebase.public.event_registrations` (federated from LakeBase)
+- **Note:** Dashboard needs the embed URL set as `REACT_APP_DASHBOARD_EMBED_URL` in the frontend env to appear in the app
+
 ### Backend API (DONE)
 - **Location:** `backend/` directory
 - **Stack:** Express.js + pg (node-postgres) with OAuth token auto-refresh
@@ -538,7 +555,7 @@ REACT_APP_DASHBOARD_EMBED_URL=__DASHBOARD_EMBED_URL__
 2. ✅ **DONE** LakeBase table creation + backend API (Express.js + OAuth) — `backend/`
 3. ✅ **DONE** Registration data visible in LakeBase / queryable
 4. ✅ **DONE** Dashboard tab with react-leaflet choropleth map (borough-level, lava color scale, auto-refresh 10s)
-5. 🔄 **IN PROGRESS** Databricks AI/BI Dashboard (Lakeview) — creating via API, will query LakeBase UC catalog, embed in frontend
+5. ✅ **DONE** Databricks AI/BI Dashboard (Lakeview) — created via API, queries LakeBase UC catalog, published for embedding
 
 ### P1 — Should Have (makes demo impressive)
 6. ✅ **DONE** Register LakeBase in UC — catalog `nyc_demo_lakebase`
