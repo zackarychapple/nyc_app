@@ -11,6 +11,7 @@ app.use(cors({
     'https://dbxdemonyc.com',
     'https://www.dbxdemonyc.com',
     'https://dx7u5ga7qr7e7.amplifyapp.com',
+    'https://nyc-demo-api-3590757798436003.aws.databricksapps.com',
     'http://localhost:3000',
   ],
   methods: ['GET', 'POST', 'OPTIONS'],
