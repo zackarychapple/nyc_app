@@ -11,7 +11,7 @@ app.use(cors({
     'https://dbxdemonyc.com',
     'https://www.dbxdemonyc.com',
     'https://dx7u5ga7qr7e7.amplifyapp.com',
-    'https://nyc-demo-api-3590757798436003.aws.databricksapps.com',
+    'https://main.d1erxf8q87xlvj.amplifyapp.com',
     'http://localhost:3000',
   ],
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -24,7 +24,14 @@ app.get('/health', async (req, res) => {
     await pool.query('SELECT 1');
     res.json({ status: 'ok', db: 'connected' });
   } catch (err) {
-    res.status(503).json({ status: 'error', db: 'disconnected', message: err.message });
+    res.status(503).json({
+      status: 'error',
+      db: 'disconnected',
+      message: err.message,
+      has_database_url: !!process.env.DATABASE_URL,
+      has_lakebase_host: !!process.env.LAKEBASE_HOST,
+      port: process.env.PORT,
+    });
   }
 });
 
