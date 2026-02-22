@@ -350,10 +350,11 @@ nyc_app/
 │   └── notebooks/
 │       ├── exploration.py
 │       └── demo_reset.py
-├── scripts/                           # ⬜ TODO
-│   ├── setup.sh
-│   ├── seed_data.sh
-│   └── teardown.sh
+├── scripts/                           # ✅ BUILT (demo_reset + seed_data)
+│   ├── demo_reset.sh                 # Truncate all registrations (with confirmation)
+│   ├── seed_data.sh                  # Insert 25 realistic fake registrations
+│   ├── setup.sh                      # ⬜ TODO
+│   └── teardown.sh                   # ⬜ TODO
 └── README.md                          # ⬜ TODO
 ```
 
@@ -640,12 +641,12 @@ REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com  # Set once backend is d
 5. ✅ **DONE** Databricks AI/BI Dashboard (Lakeview) created + AIBI SDK embed component
 6. ✅ **DONE** Service Principal for public dashboard embedding
 7. ✅ **DONE** Register LakeBase in UC — catalog `nyc_demo_lakebase`
-8. **🔴 BLOCKER** Deploy backend to Amplify WEB_COMPUTE (`d1erxf8q87xlvj`) — fix buildspec, add SP env vars
+8. ✅ **DONE** Deploy backend to Amplify WEB_COMPUTE — live at `https://main.d1erxf8q87xlvj.amplifyapp.com`
 9. **🔴 BLOCKER** Set `REACT_APP_API_URL` on frontend Amplify + rebuild — depends on #8
 
 ### P1 — Should Have (makes demo impressive)
-10. ⬜ Demo reset script (TRUNCATE + seed 5-10 fake registrations)
-11. ⬜ Seed data script with realistic fake data for testing
+10. ✅ **DONE** Demo reset script — `scripts/demo_reset.sh` (TRUNCATE with confirmation prompt)
+11. ✅ **DONE** Seed data script — `scripts/seed_data.sh` (25 realistic registrations across all boroughs/states)
 
 ### P2 — Nice to Have (NLP pipeline)
 12. ⬜ Streaming NLP job classifying reasons into topics
