@@ -6,7 +6,15 @@ const pool = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://dbxdemonyc.com',
+    'https://www.dbxdemonyc.com',
+    'https://dx7u5ga7qr7e7.amplifyapp.com',
+    'http://localhost:3000',
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+}));
 app.use(express.json());
 
 // Health check
@@ -100,7 +108,6 @@ app.get('/topics', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    // Table may not exist yet if NLP pipeline hasn't run
     if (err.code === '42P01') {
       return res.json([]);
     }
@@ -129,7 +136,7 @@ async function getServicePrincipalToken() {
 
   const tokenUrl = `${workspaceUrl.replace(/\/$/, '')}/oidc/v1/token`;
 
-  const resp = await fetch(tokenUrl, {
+  const res = await fetch(tokenUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -140,18 +147,18 @@ async function getServicePrincipalToken() {
     }),
   });
 
-  if (!resp.ok) {
-    const body = await resp.text();
-    throw new Error(`Token request failed (${resp.status}): ${body}`);
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Token request failed (${res.status}): ${body}`);
   }
 
-  const data = await resp.json();
+  const data = await res.json();
   spToken = data.access_token;
   spTokenExpiry = now + (data.expires_in || 3600) * 1000;
   return spToken;
 }
 
-// GET /dashboard-token — mint a SP token for the embedded Databricks dashboard
+// GET /dashboard-token — mint a token for the embedded Databricks dashboard
 app.get('/dashboard-token', async (req, res) => {
   try {
     const token = await getServicePrincipalToken();
@@ -162,6 +169,6 @@ app.get('/dashboard-token', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`NYC Demo API running on port ${PORT}`);
 });
