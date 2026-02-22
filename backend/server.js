@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const serverless = require('serverless-http');
 const pool = require('./db');
 
 const app = express();
@@ -170,6 +171,12 @@ app.get('/dashboard-token', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`NYC Demo API running on port ${PORT}`);
-});
+// Lambda handler for Amplify Compute
+module.exports.handler = serverless(app);
+
+// Local development server
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`NYC Demo API running on port ${PORT}`);
+  });
+}
