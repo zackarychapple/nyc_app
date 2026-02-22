@@ -107,11 +107,10 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
   - Custom domain: `dbxdemonyc.com`
   - Build: `npm install` → `npm run build` → serves `build/`
   - Env var needed: `REACT_APP_API_URL` → set to backend URL once deployed
-- **Backend Amplify App:** `d1erxf8q87xlvj` (WEB_COMPUTE, `appRoot: backend`)
-  - Default domain: `d1erxf8q87xlvj.amplifyapp.com`
-  - Env vars set: `DATABASE_URL`
-  - Env vars needed: `DATABRICKS_WORKSPACE_URL`, `DATABRICKS_SP_CLIENT_ID`, `DATABRICKS_SP_CLIENT_SECRET`
-  - **STATUS: DEPLOY PENDING** — last build failed (buildspec `cd backend` issue, see Deployment section)
+- **Backend Amplify App:** `d1erxf8q87xlvj` (WEB_COMPUTE)
+  - URL: `https://main.d1erxf8q87xlvj.amplifyapp.com`
+  - Env vars set: `DATABASE_URL`, `DATABRICKS_WORKSPACE_URL`, `DATABRICKS_SP_CLIENT_ID`, `DATABRICKS_SP_CLIENT_SECRET`, `PORT`
+  - **STATUS: DEPLOYED AND WORKING** — all endpoints verified (health, registrations, dashboard-token)
 
 ### Databricks Details
 - **Workspace:** `https://dbc-eca83c32-b44b.cloud.databricks.com/`
@@ -178,62 +177,51 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 - **Run locally:** `cd backend && npm install && node server.js`
 - **Frontend integration:** set `REACT_APP_API_URL=http://localhost:3001` for local dev
 
-### Backend Deployment (BLOCKER — must complete for demo)
+### Backend Deployment (DONE)
 
-**Target:** Amplify WEB_COMPUTE app `d1erxf8q87xlvj` (publicly accessible, no auth)
+**URL:** `https://main.d1erxf8q87xlvj.amplifyapp.com` (publicly accessible, no auth)
 
 **Why NOT Databricks Apps:** Databricks Apps require authentication (302 → login page). Public visitors can't access them.
 
-**Last build failed (Job #2):** The buildspec had `cd backend` commands, but since `appRoot: backend` is set, the build already runs from `backend/`. Fix: remove the `cd backend` from buildspec commands.
+**Key Amplify WEB_COMPUTE gotchas discovered:**
+1. `cd` in build commands persists between commands within the same phase — use `npm --prefix` instead
+2. Amplify WEB_COMPUTE does NOT pass console env vars to compute runtime — must create `.env` file during build
+3. `nodejs18.x` runtime is not supported — use `nodejs20.x` or `nodejs22.x`
+4. Don't use `applications:` with `appRoot:` format — artifact collection has issues finding `deploy-manifest.json`
 
-**Correct buildspec for backend Amplify app:**
+**Working buildspec (set via AWS CLI on the app, not in repo):**
 ```yaml
 version: 1
-applications:
-  - appRoot: backend
-    frontend:
-      phases:
-        preBuild:
-          commands:
-            - npm ci
-        build:
-          commands:
-            - mkdir -p .amplify-hosting/compute/default
-            - cp server.js db.js package.json package-lock.json .amplify-hosting/compute/default/
-            - cd .amplify-hosting/compute/default && npm ci --production
-            - mkdir -p .amplify-hosting/static
-            - |
-              cat > .amplify-hosting/deploy-manifest.json << 'EOF'
-              {
-                "version": 1,
-                "routes": [
-                  { "path": "/*", "target": { "kind": "Compute", "src": "default" } }
-                ],
-                "computeResources": [
-                  { "name": "default", "entrypoint": "server.js", "runtime": "nodejs18.x" }
-                ],
-                "framework": { "name": "express", "version": "4.21.2" }
-              }
-              EOF
-      artifacts:
-        baseDirectory: .amplify-hosting
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm --prefix backend ci
+    build:
+      commands:
+        - mkdir -p .amplify-hosting/compute/default .amplify-hosting/static
+        - cp backend/server.js backend/db.js backend/package.json backend/package-lock.json .amplify-hosting/compute/default/
+        - npm --prefix .amplify-hosting/compute/default ci --omit=dev
+        - echo "DATABASE_URL=${DATABASE_URL}" > .amplify-hosting/compute/default/.env
+        - echo "DATABRICKS_WORKSPACE_URL=${DATABRICKS_WORKSPACE_URL}" >> .amplify-hosting/compute/default/.env
+        - echo "DATABRICKS_SP_CLIENT_ID=${DATABRICKS_SP_CLIENT_ID}" >> .amplify-hosting/compute/default/.env
+        - echo "DATABRICKS_SP_CLIENT_SECRET=${DATABRICKS_SP_CLIENT_SECRET}" >> .amplify-hosting/compute/default/.env
+        - echo "PORT=8080" >> .amplify-hosting/compute/default/.env
+        - echo '{"version":1,"routes":[{"path":"/*","target":{"kind":"Compute","src":"default"}}],"computeResources":[{"name":"default","entrypoint":"server.js","runtime":"nodejs20.x"}],"framework":{"name":"express","version":"4.21.2"}}' > .amplify-hosting/deploy-manifest.json
+  artifacts:
+    baseDirectory: .amplify-hosting
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - backend/node_modules/**/*
 ```
 
-**Env vars needed on backend Amplify app (`d1erxf8q87xlvj`):**
-```
-DATABASE_URL=postgresql://nyc_app:<password>@ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com/databricks_postgres?sslmode=require
-DATABRICKS_WORKSPACE_URL=https://dbc-eca83c32-b44b.cloud.databricks.com
-DATABRICKS_SP_CLIENT_ID=4ae0de5c-dc08-49e8-9491-30ae1e81ecbd
-DATABRICKS_SP_CLIENT_SECRET=<SP_SECRET_IN_BACKEND_ENV>
-```
+**Env vars set on backend Amplify app (`d1erxf8q87xlvj`):**
+All set at app and branch level: `DATABASE_URL`, `DATABRICKS_WORKSPACE_URL`, `DATABRICKS_SP_CLIENT_ID`, `DATABRICKS_SP_CLIENT_SECRET`, `PORT`
 
-**After backend deploys:**
-1. Set `REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com` on frontend Amplify app (`dx7u5ga7qr7e7`)
+**Next step:**
+1. Set `REACT_APP_API_URL=https://main.d1erxf8q87xlvj.amplifyapp.com` on frontend Amplify app (`dx7u5ga7qr7e7`)
 2. Trigger frontend rebuild
 3. Test end-to-end: registration → LakeBase → dashboard charts + map
 
