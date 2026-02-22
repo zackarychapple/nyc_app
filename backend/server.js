@@ -24,14 +24,7 @@ app.get('/health', async (req, res) => {
     await pool.query('SELECT 1');
     res.json({ status: 'ok', db: 'connected' });
   } catch (err) {
-    res.status(503).json({
-      status: 'error',
-      db: 'disconnected',
-      message: err.message,
-      has_database_url: !!process.env.DATABASE_URL,
-      has_lakebase_host: !!process.env.LAKEBASE_HOST,
-      port: process.env.PORT,
-    });
+    res.status(503).json({ status: 'error', db: 'disconnected', message: err.message });
   }
 });
 
