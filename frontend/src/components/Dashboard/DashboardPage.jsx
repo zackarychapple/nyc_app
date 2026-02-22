@@ -1,7 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import NYCMap from './NYCMap';
+import { getRegistrations } from '../../services/api';
+
+const POLL_INTERVAL = 10000; // 10 seconds
 
 function DashboardPage() {
   const dashboardUrl = process.env.REACT_APP_DASHBOARD_EMBED_URL;
+  const [registrations, setRegistrations] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const data = await getRegistrations();
+      setRegistrations(data);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Failed to fetch registrations:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
@@ -10,6 +32,32 @@ function DashboardPage() {
         <p className="text-gray-600">
           See who's here and what they're excited about — powered by Databricks
         </p>
+        {lastUpdated && (
+          <p className="text-xs text-gray-400 mt-1">
+            <i className="fas fa-sync-alt mr-1"></i>
+            Auto-refreshing every 10s — Last updated: {lastUpdated.toLocaleTimeString()}
+          </p>
+        )}
+      </div>
+
+      {/* Stats Bar */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+          <div className="text-3xl font-bold text-lava-500">{registrations.length}</div>
+          <div className="text-sm text-gray-500">Total Registered</div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+          <div className="text-3xl font-bold text-navy-900">
+            {registrations.filter((r) => r.location_type === 'nyc').length}
+          </div>
+          <div className="text-sm text-gray-500">From NYC</div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+          <div className="text-3xl font-bold text-navy-800">
+            {new Set(registrations.filter((r) => r.borough).map((r) => r.borough)).size}
+          </div>
+          <div className="text-sm text-gray-500">Boroughs Represented</div>
+        </div>
       </div>
 
       {/* Map Section */}
@@ -18,13 +66,7 @@ function DashboardPage() {
           <i className="fas fa-map-marked-alt mr-2 text-lava-500"></i>
           NYC Registration Map
         </h2>
-        <div className="bg-oat-medium rounded-lg flex items-center justify-center" style={{ height: 400 }}>
-          <div className="text-center text-gray-400">
-            <i className="fas fa-map text-5xl mb-3 block"></i>
-            <p className="font-medium">Kepler.gl Map</p>
-            <p className="text-sm">Will display registration density by neighborhood</p>
-          </div>
-        </div>
+        <NYCMap registrations={registrations} />
       </section>
 
       {/* Embedded Dashboard Section */}
