@@ -1,0 +1,7 @@
+{
+  "Manhattan": ["Lower East Side", "East Village", "Greenwich Village", "SoHo", "Tribeca", "Chelsea", "Midtown", "Upper East Side", "Upper West Side", "Harlem", "Washington Heights", "Inwood", "Financial District", "Chinatown", "Hell's Kitchen"],
+  "Brooklyn": ["Williamsburg", "Greenpoint", "Fort Greene", "Park Slope", "DUMBO", "Brooklyn Heights", "Bed-Stuy", "Bushwick", "Crown Heights", "Sunset Park", "Bay Ridge", "Flatbush", "Prospect Heights", "Red Hook", "Cobble Hill"],
+  "Queens": ["Astoria", "Long Island City", "Jackson Heights", "Flushing", "Forest Hills", "Ridgewood", "Sunnyside", "Woodside", "Jamaica", "Bayside", "Elmhurst", "Corona", "Rockaway Beach"],
+  "The Bronx": ["South Bronx", "Mott Haven", "Fordham", "Riverdale", "Kingsbridge", "Pelham Bay", "Tremont", "Concourse", "Hunts Point", "Norwood"],
+  "Staten Island": ["St. George", "Stapleton", "Tottenville", "Great Kills", "New Dorp", "West Brighton", "Port Richmond"]
+}

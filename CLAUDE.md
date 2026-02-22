@@ -75,24 +75,34 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 
 ---
 
-## Open Infrastructure Questions (Owner must fill in)
-
-> **These MUST be resolved before development begins. Update this section as you provision resources.**
+## Infrastructure (Resolved)
 
 | # | Question | Status | Value |
 |---|----------|--------|-------|
 | 1 | LakeBase instance name & connection string | ⬜ TODO | `__LAKEBASE_HOST__`, `__LAKEBASE_PORT__`, `__LAKEBASE_DB__` |
 | 2 | LakeBase credentials (user/password or service principal) | ⬜ TODO | `__LAKEBASE_USER__`, `__LAKEBASE_PASSWORD__` |
-| 3 | Databricks workspace URL | ⬜ TODO | `__DATABRICKS_WORKSPACE_URL__` |
+| 3 | Databricks workspace URL | ✅ DONE | `https://dbc-eca83c32-b44b.cloud.databricks.com/` |
 | 4 | Databricks SQL Warehouse ID (for dashboard) | ⬜ TODO | `__SQL_WAREHOUSE_ID__` |
 | 5 | Unity Catalog: catalog name for LakeBase registration | ⬜ TODO | `__UC_CATALOG__` |
 | 6 | Unity Catalog: catalog/schema for Delta tables (NLP output) | ⬜ TODO | `__UC_ANALYTICS_CATALOG__`.`__UC_ANALYTICS_SCHEMA__` |
-| 7 | AWS Amplify app ID & branch | ⬜ TODO | `__AMPLIFY_APP_ID__` |
-| 8 | Route 53 hosted zone for dbxdemonyc.com | ⬜ TODO | `__ROUTE53_ZONE_ID__` |
-| 9 | GitHub repo URL | ⬜ TODO | `__GITHUB_REPO__` |
+| 7 | AWS Amplify app ID & branch | ✅ DONE | App ID: `dx7u5ga7qr7e7`, Branch: `main`, appRoot: `frontend` |
+| 8 | Route 53 hosted zone for dbxdemonyc.com | ✅ DONE | Zone ID: `Z0539934378OSJQUTTXIA` |
+| 9 | GitHub repo URL | ✅ DONE | `https://github.com/jneil17/nyc_app` (public) |
 | 10 | Databricks PAT or OAuth config for API calls | ⬜ TODO | `__DATABRICKS_TOKEN__` |
 | 11 | LakeBase → UC: Using registered catalog + streaming table, OR Lakehouse Federation? | ⬜ TODO | (see notes below) |
 | 12 | NLP model choice (LDA, zero-shot classifier, etc.) | ⬜ TODO | TBD after testing |
+
+### AWS Details
+- **Account:** `637423476933`
+- **IAM User:** `jneil_developer` (has `ClaudeCodeDemoAccess` policy: Amplify, Route53, IAM read-only)
+- **Amplify default domain:** `dx7u5ga7qr7e7.amplifyapp.com`
+- **Custom domain:** `dbxdemonyc.com` — DNS configured, `www` verified, root domain pending propagation
+- **Amplify build spec:** builds React app from `frontend/` (`npm ci` → `npm run build` → serves `build/`)
+
+### Databricks Details
+- **Workspace:** `https://dbc-eca83c32-b44b.cloud.databricks.com/`
+- **CLI Profile:** `dbc-eca83c32-b44b` (SSO auth)
+- **Admin user:** John Neil (`jwneil17@gmail.com`)
 
 ### Important Note on Bi-Directional Sync
 
@@ -133,68 +143,96 @@ The frontend needs to read/write to LakeBase Postgres. Options:
 
 **Recommendation:** Use option 1 (Data API) if available. Otherwise option 2 (lightweight Node.js API deployed alongside the React app on Amplify).
 
+### Frontend API Contract (for backend developer)
+
+The frontend (`frontend/src/services/api.js`) is built and expects the following endpoints at `REACT_APP_API_URL`:
+
+**POST `/registrations`** — Submit a new registration
+```json
+// Request body:
+{
+  "user_id": "uuid-string",           // Generated client-side via crypto.randomUUID()
+  "location_type": "nyc",             // "nyc" | "ny_state" | "other_state"
+  "borough": "Manhattan",             // null if not NYC
+  "neighborhood": "SoHo",             // null if not NYC
+  "state": null,                      // null if NYC, "New York" if ny_state, state name otherwise
+  "reason": "I want to learn about building AI apps on Databricks"
+}
+// Response: 200 OK with the saved record
+```
+
+**GET `/registrations`** — Fetch all registrations (for dashboard/map)
+```json
+// Response: array of registration objects
+```
+
+**Behavior when no API is configured:** The frontend logs submissions to `console.log` and still shows the confirmation page. This lets the UI work standalone for development/demo prep.
+
+### Frontend Design System
+
+The frontend uses the same design language as [dbx4startups.com](https://dbx4startups.com/):
+- **Tailwind CSS** via CDN (configured in `public/index.html`)
+- **Font:** DM Sans (400, 500, 700) from Google Fonts
+- **Icons:** Font Awesome 6
+- **Colors:** Lava (#FF7A5C / #FF5F46 / #FF3621), Navy (#1B3139 / #0B2026), Oat (#F9F7F4 / #EEEDE9)
+- **Patterns:** White cards with shadows, lava gradient heroes, rounded-xl corners, clean spacing
+
 ---
 
 ## Repo Structure
 
 ```
-dbxdemonyc/
+nyc_app/
 ├── CLAUDE.md                          # This file
-├── README.md                          # Public-facing repo docs
-├── .claude/                           # ai-dev-kit Claude skills
-│   └── skills/                        # Databricks-specific skills
-├── frontend/
+├── .gitignore                         # ✅ Built (node_modules, .env, build/, etc.)
+├── .env.example                       # ✅ Built (template for all env vars)
+├── frontend/                          # ✅ BUILT — React app (CRA)
 │   ├── package.json
+│   ├── postcss.config.js
 │   ├── public/
-│   │   └── index.html
+│   │   └── index.html                 # Tailwind CDN + DM Sans + Font Awesome
 │   ├── src/
-│   │   ├── App.jsx                    # Main app with tab routing
-│   │   ├── index.jsx                  # Entry point
+│   │   ├── App.js                     # React Router: / (register) and /dashboard
+│   │   ├── index.js                   # Entry point
+│   │   ├── index.css                  # Minimal base styles (Tailwind via CDN)
 │   │   ├── components/
 │   │   │   ├── Registration/
-│   │   │   │   ├── RegistrationFlow.jsx    # Main registration orchestrator
-│   │   │   │   ├── BoroughSelector.jsx     # Step 1: NYC vs outside
-│   │   │   │   ├── NeighborhoodSelector.jsx # Step 2: Neighborhood picker
-│   │   │   │   ├── StateSelector.jsx       # Step 2-alt: US state picker
-│   │   │   │   ├── ReasonInput.jsx         # Step 3: Free-text "what brought you"
-│   │   │   │   └── Confirmation.jsx        # Step 4: Thank you + UUID display
+│   │   │   │   ├── RegistrationFlow.jsx    # Orchestrator: manages step state + form data
+│   │   │   │   ├── LocationSelector.jsx    # Step 1: NYC / NY State / Other State cards
+│   │   │   │   ├── BoroughSelector.jsx     # Step 2a: Borough + Neighborhood dropdowns
+│   │   │   │   ├── StateSelector.jsx       # Step 2c: US state dropdown
+│   │   │   │   ├── ReasonInput.jsx         # Step 3: Free-text textarea (10-500 chars)
+│   │   │   │   └── Confirmation.jsx        # Step 4: Success + link to dashboard
 │   │   │   ├── Dashboard/
-│   │   │   │   ├── DashboardPage.jsx       # Container for map + chart
-│   │   │   │   ├── KeplerMap.jsx           # Kepler.gl choropleth component
-│   │   │   │   └── EmbeddedDashboard.jsx   # Databricks AI/BI iframe embed
+│   │   │   │   └── DashboardPage.jsx       # Placeholder: map area + dashboard iframe area
 │   │   │   └── common/
-│   │   │       ├── Header.jsx              # Nav bar with tabs
-│   │   │       └── Loading.jsx             # Loading spinner
+│   │   │       └── Header.jsx              # Nav bar with Register/Dashboard tabs
 │   │   ├── data/
-│   │   │   ├── boroughs.json               # NYC boroughs list
-│   │   │   ├── neighborhoods.json          # Borough → neighborhood mapping (from NYC OpenData)
-│   │   │   └── us-states.json              # US states list
-│   │   ├── services/
-│   │   │   └── api.js                      # API client (talks to LakeBase or backend)
-│   │   └── styles/
-│   │       └── global.css
-│   └── amplify.yml                    # Amplify build config
-├── backend/                           # (if needed — lightweight API proxy)
+│   │   │   ├── neighborhoods.json          # ✅ Borough → neighborhood mapping (curated)
+│   │   │   └── us-states.json              # ✅ 50 states + DC
+│   │   └── services/
+│   │       └── api.js                      # ✅ API client (see Frontend API Contract below)
+├── backend/                           # ⬜ TODO — lightweight API proxy
 │   ├── package.json
 │   ├── server.js                      # Express server
 │   └── db.js                          # Postgres connection pool (pg library)
-├── databricks/
+├── databricks/                        # ⬜ TODO
 │   ├── setup/
-│   │   ├── 01_create_lakebase_tables.sql       # DDL for LakeBase tables
-│   │   ├── 02_register_uc_catalog.py           # Register LakeBase in UC
-│   │   ├── 03_create_streaming_table.sql       # Streaming table from LakeBase catalog
-│   │   ├── 04_create_synced_table.py           # Synced table: Delta → LakeBase (reverse ETL)
-│   │   └── 05_create_dashboard.sql             # AI/BI dashboard queries
+│   │   ├── 01_create_lakebase_tables.sql
+│   │   ├── 02_register_uc_catalog.py
+│   │   ├── 03_create_streaming_table.sql
+│   │   ├── 04_create_synced_table.py
+│   │   └── 05_create_dashboard.sql
 │   ├── jobs/
-│   │   └── nlp_streaming_job.py                # Structured streaming NLP classification
+│   │   └── nlp_streaming_job.py
 │   └── notebooks/
-│       ├── exploration.py                      # Ad-hoc data exploration
-│       └── demo_reset.py                       # Reset script for demo prep
-├── scripts/
-│   ├── setup.sh                       # End-to-end setup script
-│   ├── seed_data.sh                   # Seed fake data for testing
-│   └── teardown.sh                    # Clean up all resources
-└── .env.example                       # Template for environment variables
+│       ├── exploration.py
+│       └── demo_reset.py
+├── scripts/                           # ⬜ TODO
+│   ├── setup.sh
+│   ├── seed_data.sh
+│   └── teardown.sh
+└── README.md                          # ⬜ TODO
 ```
 
 ---
@@ -463,27 +501,27 @@ REACT_APP_DASHBOARD_EMBED_URL=__DASHBOARD_EMBED_URL__
 ## Priority / Build Order
 
 ### P0 — Must Have for Thursday (MVP)
-1. ✅ Frontend registration flow (borough → neighborhood → reason → submit)
-2. ✅ LakeBase table creation + API to write registrations
-3. ✅ Registration data visible in LakeBase / queryable
-4. ✅ Basic dashboard tab with Kepler choropleth map (registration density)
-5. ✅ Embedded Databricks Dashboard (bar chart of reasons — even if raw text, not NLP-classified)
+1. ✅ **DONE** Frontend registration flow (borough → neighborhood → reason → submit)
+2. ⬜ LakeBase table creation + API to write registrations
+3. ⬜ Registration data visible in LakeBase / queryable
+4. ⬜ Basic dashboard tab with Kepler choropleth map (registration density) — placeholder built, needs Kepler.gl + data
+5. ⬜ Embedded Databricks Dashboard (bar chart of reasons) — placeholder built, needs embed URL
 
 ### P1 — Should Have (makes demo impressive)
-6. Register LakeBase in UC + streaming table
-7. Synced Table back to Postgres
-8. Real-time auto-refresh on map (polling every 10s)
-9. Demo reset script
+6. ⬜ Register LakeBase in UC + streaming table
+7. ⬜ Synced Table back to Postgres
+8. ⬜ Real-time auto-refresh on map (polling every 10s)
+9. ⬜ Demo reset script
 
 ### P2 — Nice to Have (NLP pipeline)
-10. Streaming NLP job classifying reasons into topics
-11. Topic-colored choropleth (color by topic, not just density)
-12. Per-registration topic assignments synced back
+10. ⬜ Streaming NLP job classifying reasons into topics
+11. ⬜ Topic-colored choropleth (color by topic, not just density)
+12. ⬜ Per-registration topic assignments synced back
 
 ### P3 — Polish
-13. Seed data script with realistic fake data
-14. Teardown script
-15. Comprehensive README for reproducibility
+13. ⬜ Seed data script with realistic fake data
+14. ⬜ Teardown script
+15. ⬜ Comprehensive README for reproducibility
 
 ---
 
