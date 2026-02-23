@@ -32,14 +32,18 @@ _No active tasks. All P0/P1 work is complete. See backlog for future enhancement
 - **Acceptance criteria:** Users can ask natural language questions and see Genie answers on /dashboard ✅
 
 ### Task 16 — Enhanced map: neighborhood boundaries + surrounding states
-- **Owner:** TBD (Claude 1 or Claude 3)
-- **Status:** ROADMAP
-- **Priority:** P3 / Future
-- **What it does:** Two enhancements to `NYCMap.jsx`:
-  1. **Neighborhood-level polygons** — replace borough-only choropleth with NTA (Neighborhood Tabulation Area) boundaries from NYC OpenData. Color individual neighborhoods by registration density. Source: https://data.cityofnewyork.us/City-Government/Neighborhood-Tabulation-Areas-NTA-/cpf4-rkhq
-  2. **Surrounding state boundaries** — add GeoJSON for NY, NJ, CT, PA, MA so non-NYC registrations show on the map with a lighter fill. Source: US Census TIGER/Line or Natural Earth Data.
-- **Files:** `NYCMap.jsx`, add `frontend/public/nyc_neighborhoods.geojson` + `frontend/public/us_states.geojson`
-- **Notes:** Simplify GeoJSON via mapshaper.org to keep file sizes small. Need name-matching between `neighborhoods.json` and NTA GeoJSON. Consider lazy-loading larger files.
+- **Owner:** Claude 1
+- **Status:** DONE
+- **Priority:** P3
+- **Completed:** 2026-02-22
+- **Details:**
+  - Rewrote `NYCMap.jsx` with 3-layer architecture: surrounding states (bottom) → 197 NTA neighborhood polygons (middle) → borough outlines (top)
+  - Created `neighborhoodToNtaMap.js` mapping 60 curated names → NTA GeoJSON feature names
+  - Created `surrounding_states.geojson` (NY, NJ, CT, PA, MA — 110KB, Census 500k resolution)
+  - Lava gradient for neighborhoods, muted navy for states, two-row legend
+  - Dynamic style updates via ref+setStyle (no flicker on poll refresh)
+  - `minZoom={7}` allows zooming out to see tri-state area
+- **Acceptance criteria:** 197 neighborhood polygons colored by density, borough outlines visible, surrounding states visible when zoomed out, legend updated ✅
 
 ### Topic-colored choropleth on map
 - **Owner:** TBD
@@ -73,4 +77,5 @@ _No active tasks. All P0/P1 work is complete. See backlog for future enhancement
 | 14 | Polish registration flow visual design | Claude 3 | 2026-02-22 | Hover states, lava accents, transitions, character count, design system consistency |
 | 15 | Polish dashboard page layout and spacing | Claude 3 | 2026-02-22 | Stats bar balanced, consistent section gaps, clean table styling, professional layout |
 | 17 | Security audit: scan repo for secrets | Claude 1 | 2026-02-22 | Clean — no secrets in tracked files or git history. `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, `*.png`. |
+| 16 | Enhanced map: neighborhood boundaries + surrounding states | Claude 1 | 2026-02-22 | 3-layer map: 197 NTA neighborhoods + borough outlines + tri-state. `neighborhoodToNtaMap.js`, `surrounding_states.geojson` |
 | 18 | Write comprehensive README | Claude 1 | 2026-02-22 | Architecture diagram, tech stack, getting started, deployment, API reference, demo playbook |

@@ -104,6 +104,21 @@
 - Verified: Backend `POST /genie/ask` responds on production (tested "How many total registrations?" → "36")
 - Design matches existing dashboard sections: white card, rounded-xl, shadow-md, lava accent icon
 
+### 2026-02-22 — Claude 1 (Task 16: Enhanced Map)
+
+**Task 16: Neighborhood boundaries + surrounding states**
+- Rewrote `NYCMap.jsx` from 5 borough polygons to 3-layer architecture:
+  1. **Layer 1 (bottom):** Surrounding states (NY, NJ, CT, PA, MA) — muted navy fill, 110KB GeoJSON from Census 500k
+  2. **Layer 2 (middle):** 197 NTA neighborhood polygons — lava gradient by registration density
+  3. **Layer 3 (top):** Borough boundary outlines — 2.5px navy, no fill, non-interactive
+- Created `frontend/src/data/neighborhoodToNtaMap.js` — 60 curated neighborhood names mapped to NTA GeoJSON feature names
+  - Handles one-to-many (e.g., "Upper East Side" → 3 NTA polygons) and many-to-one (e.g., "Red Hook" + "Cobble Hill" → same polygon)
+- Created `frontend/public/surrounding_states.geojson` — 5 states, MultiPolygon geometry, 110KB
+- Dynamic style updates via `ref.eachLayer().setStyle()` — no flicker on 10s poll refresh
+- Two-row legend: Neighborhoods (lava gradient) + Tri-State (navy gradient) + borough line indicator
+- `minZoom={7}` allows zooming out to see surrounding states
+- Verified: build passes, dev server renders all 3 layers, no console errors, tooltips show borough + count
+
 ### 2026-02-22 — Coordinator Review
 
 **Findings from status check:**
