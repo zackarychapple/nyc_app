@@ -11,6 +11,7 @@ app.use(cors({
     'https://dbxdemonyc.com',
     'https://www.dbxdemonyc.com',
     'https://dx7u5ga7qr7e7.amplifyapp.com',
+    'https://main.dx7u5ga7qr7e7.amplifyapp.com',
     'https://main.d1erxf8q87xlvj.amplifyapp.com',
     'http://localhost:3000',
   ],
