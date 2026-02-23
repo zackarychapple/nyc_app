@@ -71,7 +71,7 @@ function EmbeddedDashboard() {
   }
 
   return (
-    <div className="relative" style={{ minHeight: 400 }}>
+    <div className="relative" style={{ minHeight: 800 }}>
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-oat-light rounded-lg">
           <div className="text-center text-gray-400">
@@ -80,7 +80,19 @@ function EmbeddedDashboard() {
           </div>
         </div>
       )}
-      <div ref={containerRef} className="w-full rounded-lg overflow-x-auto" style={{ minHeight: 400 }} />
+      <div
+        ref={containerRef}
+        className="w-full rounded-lg overflow-x-auto dbx-embed-container"
+        style={{ minHeight: 800 }}
+      />
+      <style>{`
+        /* Ensure the SDK iframe fills the container */
+        .dbx-embed-container iframe {
+          width: 100% !important;
+          height: 800px !important;
+          border: none;
+        }
+      `}</style>
     </div>
   );
 }
