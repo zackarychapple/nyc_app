@@ -1,5 +1,18 @@
 # CLAUDE.md — DBX Demo NYC (dbxdemonyc.com)
 
+> **Companion files (agents must read these too):**
+> - **TASKS.md** — Active task board. Check here for your assignments.
+> - **PROGRESS.md** — Development log. Log what you did and how you verified it.
+
+## Agent Workflow Rules
+
+1. **Before starting work:** Read TASKS.md, claim your task (set status to `IN PROGRESS`)
+2. **While working:** Commit frequently, rebase on `origin/main` before merging
+3. **After completing a task:** Log in PROGRESS.md with verification proof, update TASKS.md status to `DONE`
+4. **Never update status in CLAUDE.md** — CLAUDE.md is for architecture/conventions only, not status tracking
+5. **Verify before claiming done** — run the acceptance criteria command. If you set env vars, curl the endpoint. If you deployed, test the URL.
+6. **Secrets:** Never hardcode secrets in files. Use env vars only. If you see secrets in plaintext, delete the file and flag it in PROGRESS.md.
+
 ## Project Overview
 
 An interactive demo application for a NYC Founders event (Thursday presentation) showcasing how **Databricks is a complete platform for building production applications**. The hero feature is **LakeBase** (Databricks' managed Postgres offering) powering a real-time event registration + analytics pipeline.
@@ -351,7 +364,7 @@ nyc_app/
 │       ├── exploration.py
 │       └── demo_reset.py
 ├── scripts/                           # ✅ BUILT (demo_reset + seed_data)
-│   ├── demo_reset.sh                 # Truncate all registrations (with confirmation)
+│   ├── demo_reset.sh                 # Truncate registrations (--seed to re-seed, -y to skip prompt)
 │   ├── seed_data.sh                  # Insert 25 realistic fake registrations
 │   ├── setup.sh                      # ⬜ TODO
 │   └── teardown.sh                   # ⬜ TODO
@@ -659,33 +672,22 @@ REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com  # Set once backend is d
 
 ---
 
-## Demo Reset Script
+## Demo Reset
 
-```python
-# databricks/notebooks/demo_reset.py
-# Run before the presentation to clear all data
+Two ways to reset demo data before a presentation:
 
-# 1. TRUNCATE event_registrations in LakeBase
-# 2. Clear/reset the streaming table
-# 3. Clear topic_analysis Delta table
-# 4. Optionally seed 5-10 fake registrations so the dashboard isn't empty
-
-# Connection to LakeBase:
-import psycopg2
-conn = psycopg2.connect(
-    host="__LAKEBASE_HOST__",
-    port=5432,
-    dbname="__LAKEBASE_DB__",
-    user="__LAKEBASE_USER__",
-    password="__LAKEBASE_PASSWORD__",
-    sslmode="require"
-)
-cur = conn.cursor()
-cur.execute("TRUNCATE TABLE public.event_registrations;")
-conn.commit()
-cur.close()
-conn.close()
+### Option 1: Shell script (local machine)
+```bash
+./scripts/demo_reset.sh              # Truncate only (with confirmation)
+./scripts/demo_reset.sh --seed       # Truncate + re-seed 25 fake registrations
+./scripts/demo_reset.sh --seed -y    # Skip confirmation prompt
 ```
+Supports `DATABASE_URL` env var or Databricks OAuth token (via CLI profile).
+
+### Option 2: Databricks notebook
+- `databricks/notebooks/demo_reset.py` — runs in workspace via UC catalog `nyc_demo_lakebase`
+- Set `SEED_DATA = True/False` at top of notebook to control seeding
+- Queries via `spark.sql()` against `nyc_demo_lakebase.public.event_registrations`
 
 ---
 
