@@ -65,6 +65,17 @@
 - Also uploaded demo_reset notebook to same workspace folder
 - Verified: `/topics` endpoint returns `[]` (no errors, table accessible but empty until notebook runs)
 
+**Task 13: Genie API backend endpoint**
+- Added `POST /genie/ask` endpoint to `backend/server.js`
+- Flow: start-conversation → poll (1-3s backoff, max 60s) → fetch query-result → return combined response
+- Response: `{answer, sql, columns, rows, suggested_questions, conversation_id, message_id}`
+- Uses existing `getSpToken()` for auth (all-apis scope)
+- SP permissions: granted `CAN_RUN` on Genie space `01f110512fd015ada6b59c70c0ef42a6`, `CAN_USE` on warehouse `e5f11d721479f35a`
+- Deployed via Amplify build #28 (auto-triggered by push to main)
+- Verified on production:
+  - "How many total registrations?" → "34 registrations" with SQL + data
+  - "Which borough has the most?" → "Manhattan, 10 registrations"
+
 ### 2026-02-22 — Coordinator Review
 
 **Findings from status check:**

@@ -41,23 +41,32 @@
 
 ## Active Tasks — Claude 2 (Backend/Infra)
 
-### Task 12 — Build NLP topic classification pipeline (P2)
+### Task 17 — Security audit: scan repo for exposed secrets and vulnerabilities
 - **Owner:** Claude 2
-- **Status:** DONE
-- **Priority:** P2
+- **Status:** TODO
+- **Priority:** P0 (before sharing repo widely)
 - **Details:**
-  - Create `databricks/jobs/nlp_topic_classifier.py`
-  - Read from `nyc_demo_lakebase.public.event_registrations` via UC
-  - Classify `reason` into topics: "AI/ML & GenAI", "Data Engineering & ETL", "Data Warehousing & Analytics", "Platform Migration", "Startups & Building Apps", "Data Governance", "Learning & Education", "Other"
-  - Use Foundation Model API (zero-shot / prompt-based — no training needed)
-  - Write to `topic_analysis` table (topic_id, topic_label, topic_count, top_words, updated_at)
-  - Optionally write per-registration assignments to `registration_topics` (user_id, assigned_topic, confidence, updated_at)
-  - Backend `GET /topics` already wired to query `topic_analysis` — returns [] if table missing
-- **Acceptance criteria:** Running the notebook populates `topic_analysis`, visible at `GET /topics`
+  - Scan full git history for leaked passwords, secrets, connection strings
+  - Scan all current tracked files for secret patterns
+  - Verify `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, etc.
+  - Check CLAUDE.md doesn't contain actual secret values (placeholders OK)
+  - If secrets found in history: rotate credentials, update Amplify env vars, verify endpoints
+- **Preliminary finding (coordinator):** `app.yaml` was never committed. No actual secrets in tracked files or history. Full pass needed to confirm.
+- **Acceptance criteria:** No secrets in tracked files or git history. Credentials rotated if anything found.
 
 ---
 
 ## Backlog (P3)
+
+### Task 13 frontend — Genie chat UI on dashboard page
+- **Owner:** Claude 1
+- **Status:** TODO
+- **Priority:** P3
+- **Details:**
+  - Backend `POST /genie/ask` is DONE and deployed — accepts `{"question": "..."}`, returns `{answer, sql, columns, rows, suggested_questions}`
+  - Need: chat input box on dashboard, loading spinner, answer + data table display
+  - Suggested starter questions as clickable chips
+- **Acceptance criteria:** Users can ask natural language questions and see Genie answers on /dashboard
 
 ### Teardown script
 - Clean up all infrastructure after the event
@@ -82,3 +91,4 @@
 | 10 | Add --seed flag to demo_reset.sh | Claude 2 | 2026-02-22 | `--seed` re-seeds after truncate, `-y` skips confirmation |
 | 11 | Create Databricks notebook demo reset | Claude 2 | 2026-02-22 | `databricks/notebooks/demo_reset.py` — uses UC catalog, SEED_DATA toggle |
 | 12 | Build NLP topic classification pipeline | Claude 2 | 2026-02-22 | `databricks/jobs/nlp_topic_classifier.py` — Claude Haiku via FMAPI, writes to topic_analysis + registration_topics |
+| 13 | Genie API backend endpoint | Claude 2 | 2026-02-22 | `POST /genie/ask` — proxies to Databricks Genie, returns answer + SQL + data. SP granted CAN_RUN on Genie space. Verified on production. |
