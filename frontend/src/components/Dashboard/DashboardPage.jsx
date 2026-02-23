@@ -30,9 +30,9 @@ function DashboardPage() {
   const boroughCount = new Set(registrations.filter((r) => r.borough).map((r) => r.borough)).size;
 
   return (
-    <main className="max-w-6xl mx-auto px-6 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-navy-900 mb-2">Live Dashboard</h1>
+    <main className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-navy-900 mb-2">Live Dashboard</h1>
         <p className="text-gray-600">
           See who's here and what they're excited about — powered by Databricks
         </p>
@@ -45,23 +45,23 @@ function DashboardPage() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-3xl font-bold text-lava-500">{registrations.length}</div>
-          <div className="text-sm text-gray-500">Total Registered</div>
+      <div className="grid grid-cols-3 gap-2 md:gap-4 mb-6 md:mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 text-center">
+          <div className="text-2xl md:text-3xl font-bold text-lava-500">{registrations.length}</div>
+          <div className="text-xs md:text-sm text-gray-500">Total Registered</div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-3xl font-bold text-navy-900">{nycCount}</div>
-          <div className="text-sm text-gray-500">From NYC</div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 text-center">
+          <div className="text-2xl md:text-3xl font-bold text-navy-900">{nycCount}</div>
+          <div className="text-xs md:text-sm text-gray-500">From NYC</div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-3xl font-bold text-navy-800">{boroughCount}</div>
-          <div className="text-sm text-gray-500">Boroughs Represented</div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 text-center">
+          <div className="text-2xl md:text-3xl font-bold text-navy-800">{boroughCount}</div>
+          <div className="text-xs md:text-sm text-gray-500">Boroughs</div>
         </div>
       </div>
 
       {/* Map Section */}
-      <section className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-8">
+      <section className="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6 mb-6 md:mb-8">
         <h2 className="text-lg font-bold text-navy-900 mb-4">
           <i className="fas fa-map-marked-alt mr-2 text-lava-500"></i>
           NYC Registration Map
@@ -70,8 +70,8 @@ function DashboardPage() {
       </section>
 
       {/* Charts Row */}
-      <div className="grid md:grid-cols-2 gap-8 mb-8">
-        <section className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-8 mb-6 md:mb-8">
+        <section className="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
           <h2 className="text-lg font-bold text-navy-900 mb-4">
             <i className="fas fa-chart-bar mr-2 text-lava-500"></i>
             Registrations by Borough
@@ -79,7 +79,7 @@ function DashboardPage() {
           <BoroughChart registrations={registrations} />
         </section>
 
-        <section className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        <section className="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
           <h2 className="text-lg font-bold text-navy-900 mb-4">
             <i className="fas fa-chart-pie mr-2 text-lava-500"></i>
             Where Are Attendees From?
@@ -89,7 +89,7 @@ function DashboardPage() {
       </div>
 
       {/* Databricks AI/BI Dashboard */}
-      <section className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-8">
+      <section className="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6 mb-6 md:mb-8">
         <h2 className="text-lg font-bold text-navy-900 mb-4">
           <i className="fas fa-database mr-2 text-lava-500"></i>
           Databricks AI/BI Dashboard
@@ -98,7 +98,7 @@ function DashboardPage() {
       </section>
 
       {/* Recent Responses */}
-      <section className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+      <section className="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6">
         <h2 className="text-lg font-bold text-navy-900 mb-4">
           <i className="fas fa-comments mr-2 text-lava-500"></i>
           Recent Responses

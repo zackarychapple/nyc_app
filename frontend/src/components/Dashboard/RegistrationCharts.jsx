@@ -38,8 +38,8 @@ function BoroughChart({ registrations }) {
 
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-        <XAxis dataKey="name" tick={{ fill: '#1B3139', fontSize: 12 }} />
+      <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+        <XAxis dataKey="name" tick={{ fill: '#1B3139', fontSize: 11 }} interval={0} />
         <YAxis allowDecimals={false} tick={{ fill: '#999', fontSize: 12 }} />
         <Tooltip
           contentStyle={{ borderRadius: 8, border: '1px solid #eee', fontFamily: 'DM Sans' }}
@@ -81,9 +81,9 @@ function LocationPieChart({ registrations }) {
         <Pie
           data={data}
           cx="50%"
-          cy="50%"
-          innerRadius={60}
-          outerRadius={100}
+          cy="45%"
+          innerRadius={50}
+          outerRadius={85}
           paddingAngle={3}
           dataKey="value"
           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -118,11 +118,11 @@ function RecentResponsesTable({ registrations }) {
   }
 
   return (
-    <div className="overflow-auto max-h-72">
-      <table className="w-full text-sm text-left">
+    <div className="overflow-x-auto max-h-72 overflow-y-auto">
+      <table className="w-full text-sm text-left" style={{ minWidth: 400 }}>
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="py-2 px-3 text-navy-800 font-semibold">Location</th>
+            <th className="py-2 px-3 text-navy-800 font-semibold whitespace-nowrap">Location</th>
             <th className="py-2 px-3 text-navy-800 font-semibold">What Brought You Here?</th>
           </tr>
         </thead>
@@ -132,7 +132,7 @@ function RecentResponsesTable({ registrations }) {
               <td className="py-2 px-3 text-gray-600 whitespace-nowrap">
                 {r.borough || r.state || 'Unknown'}
               </td>
-              <td className="py-2 px-3 text-gray-700">{r.reason}</td>
+              <td className="py-2 px-3 text-gray-700 max-w-xs truncate">{r.reason}</td>
             </tr>
           ))}
         </tbody>

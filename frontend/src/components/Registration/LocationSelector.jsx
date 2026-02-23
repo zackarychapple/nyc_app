@@ -34,10 +34,10 @@ function LocationSelector({ onSelect }) {
           <button
             key={opt.type}
             onClick={() => onSelect(opt.type)}
-            className="w-full bg-white rounded-xl shadow-md border border-gray-200 p-6 text-left hover:shadow-lg hover:border-lava-400 transition-all group cursor-pointer"
+            className="w-full bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6 text-left hover:shadow-lg hover:border-lava-400 transition-all group cursor-pointer"
           >
             <div className="flex items-center">
-              <span className="text-4xl mr-5">{opt.icon}</span>
+              <span className="text-3xl md:text-4xl mr-3 md:mr-5">{opt.icon}</span>
               <div>
                 <h3 className="text-lg font-bold text-navy-900 group-hover:text-lava-600 transition-colors">
                   {opt.title}

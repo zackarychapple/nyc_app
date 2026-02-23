@@ -80,7 +80,7 @@ function EmbeddedDashboard() {
           </div>
         </div>
       )}
-      <div ref={containerRef} className="w-full rounded-lg" style={{ minHeight: 400 }} />
+      <div ref={containerRef} className="w-full rounded-lg overflow-x-auto" style={{ minHeight: 400 }} />
     </div>
   );
 }
