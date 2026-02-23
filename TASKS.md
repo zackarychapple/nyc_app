@@ -43,7 +43,7 @@
 
 ### Task 12 — Build NLP topic classification pipeline (P2)
 - **Owner:** Claude 2
-- **Status:** IN PROGRESS
+- **Status:** DONE
 - **Priority:** P2
 - **Details:**
   - Create `databricks/jobs/nlp_topic_classifier.py`
@@ -81,3 +81,4 @@
 | 7 | Add SP env vars to backend Amplify | Claude 2 | 2026-02-22 | All 5 env vars set, /dashboard-token works |
 | 10 | Add --seed flag to demo_reset.sh | Claude 2 | 2026-02-22 | `--seed` re-seeds after truncate, `-y` skips confirmation |
 | 11 | Create Databricks notebook demo reset | Claude 2 | 2026-02-22 | `databricks/notebooks/demo_reset.py` — uses UC catalog, SEED_DATA toggle |
+| 12 | Build NLP topic classification pipeline | Claude 2 | 2026-02-22 | `databricks/jobs/nlp_topic_classifier.py` — Claude Haiku via FMAPI, writes to topic_analysis + registration_topics |

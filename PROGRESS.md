@@ -52,6 +52,19 @@
 - Steps: check current state → truncate → optionally seed 25 rows → verify
 - Uses `spark.sql()` for all operations (no direct PG connection needed)
 
+**Task 12: NLP topic classification pipeline**
+- Created `databricks/jobs/nlp_topic_classifier.py` — Databricks notebook
+- Uses Foundation Model API (`databricks-claude-haiku-4-5`) for zero-shot classification
+- 8 topic categories: AI/ML & GenAI, Data Engineering & ETL, Data Warehousing & Analytics, Platform Evaluation & Migration, Building Apps & Startups, Data Governance & Security, Learning & Education, Other
+- Reads from `nyc_demo_lakebase.public.event_registrations` via UC
+- Writes per-registration assignments to `registration_topics` (DELETE + INSERT via spark.sql)
+- Writes aggregated counts + top_words to `topic_analysis`
+- Created both tables in LakeBase with proper grants to `nyc_app` role
+- Granted SP `4ae0de5c-dc08-49e8-9491-30ae1e81ecbd` SELECT on both new tables
+- Uploaded notebook to workspace: `/Users/jwneil17@gmail.com/nyc_demo/nlp_topic_classifier`
+- Also uploaded demo_reset notebook to same workspace folder
+- Verified: `/topics` endpoint returns `[]` (no errors, table accessible but empty until notebook runs)
+
 ### 2026-02-22 — Coordinator Review
 
 **Findings from status check:**

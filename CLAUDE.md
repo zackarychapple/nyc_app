@@ -83,10 +83,11 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 │  │   → Embedded in frontend via @databricks/aibi-client SDK         │
 │  │   → Auth: Service Principal (nyc-demo-dashboard-embed)           │
 │  │                                                                  │
-│  ├── (P2) Streaming NLP Job                                         │
-│  │   → Classify `reason` text into topics                           │
+│  ├── NLP Topic Classifier (notebook)                                 │
+│  │   → Claude Haiku via FMAPI classifies `reason` into 8 topics     │
+│  │   → Writes to topic_analysis + registration_topics in LakeBase   │
 │  │                                                                  │
-│  └── (P2) Synced Table: topic_analysis → LakeBase                   │
+│  └── (Future) Synced Table: Delta → LakeBase if needed              │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -101,13 +102,13 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 | 3 | Databricks workspace URL | ✅ DONE | `https://dbc-eca83c32-b44b.cloud.databricks.com/` |
 | 4 | Databricks SQL Warehouse ID (for dashboard) | ✅ DONE | `00561e6c134511ad` (Serverless Starter Warehouse, auto-stop 10min) |
 | 5 | Unity Catalog: catalog name for LakeBase registration | ✅ DONE | `nyc_demo_lakebase` (type: MANAGED_ONLINE_CATALOG, registered via API with project UID + branch UID) |
-| 6 | Unity Catalog: catalog/schema for Delta tables (NLP output) | ⬜ TODO | `__UC_ANALYTICS_CATALOG__`.`__UC_ANALYTICS_SCHEMA__` (needed once NLP pipeline is built) |
+| 6 | Unity Catalog: catalog/schema for Delta tables (NLP output) | ✅ DONE | NLP writes directly to LakeBase via UC catalog `nyc_demo_lakebase.public` (no separate Delta tables needed) |
 | 7 | AWS Amplify app ID & branch | ✅ DONE | App ID: `dx7u5ga7qr7e7`, Branch: `main`, appRoot: `frontend` |
 | 8 | Route 53 hosted zone for dbxdemonyc.com | ✅ DONE | Zone ID: `Z0539934378OSJQUTTXIA` |
 | 9 | GitHub repo URL | ✅ DONE | `https://github.com/jneil17/nyc_app` (public) |
 | 10 | Databricks auth for dashboard embed | ✅ DONE | Service Principal `nyc-demo-dashboard-embed` (App ID: `4ae0de5c-dc08-49e8-9491-30ae1e81ecbd`). OAuth client credentials flow via `/dashboard-token` endpoint. |
 | 11 | LakeBase → UC: Using registered catalog + streaming table, OR Lakehouse Federation? | ✅ DONE | Registered LakeBase as UC catalog `nyc_demo_lakebase`. Dashboard queries federated directly. |
-| 12 | NLP model choice (LDA, zero-shot classifier, etc.) | ⬜ TODO (P2) | TBD after MVP is live |
+| 12 | NLP model choice (LDA, zero-shot classifier, etc.) | ✅ DONE | Foundation Model API: `databricks-claude-haiku-4-5` (zero-shot prompt-based classification) |
 | 13 | Backend hosting (publicly accessible) | ✅ DONE | Amplify WEB_COMPUTE app `d1erxf8q87xlvj`. NOT Databricks Apps (requires auth). |
 | 14 | LakeBase native PG role (for production DATABASE_URL) | ✅ DONE | Role: `nyc_app`, password-based auth via DATABASE_URL |
 
@@ -351,18 +352,12 @@ nyc_app/
 │   ├── server.js                      # Express server (registrations + dashboard-token + CORS)
 │   ├── db.js                          # Postgres pool (DATABASE_URL or OAuth)
 │   └── .env                           # Local env (not committed)
-├── databricks/                        # ⬜ TODO
-│   ├── setup/
-│   │   ├── 01_create_lakebase_tables.sql
-│   │   ├── 02_register_uc_catalog.py
-│   │   ├── 03_create_streaming_table.sql
-│   │   ├── 04_create_synced_table.py
-│   │   └── 05_create_dashboard.sql
+├── databricks/                        # ✅ BUILT (notebooks + jobs)
+│   ├── setup/                        # ⬜ TODO (manual setup was done via CLI)
 │   ├── jobs/
-│   │   └── nlp_streaming_job.py
+│   │   └── nlp_topic_classifier.py   # ✅ NLP pipeline — FMAPI + LakeBase write
 │   └── notebooks/
-│       ├── exploration.py
-│       └── demo_reset.py
+│       └── demo_reset.py             # ✅ Demo reset via UC catalog
 ├── scripts/                           # ✅ BUILT (demo_reset + seed_data)
 │   ├── demo_reset.sh                 # Truncate registrations (--seed to re-seed, -y to skip prompt)
 │   ├── seed_data.sh                  # Insert 25 realistic fake registrations
@@ -662,8 +657,8 @@ REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com  # Set once backend is d
 11. ✅ **DONE** Seed data script — `scripts/seed_data.sh` (25 realistic registrations across all boroughs/states)
 
 ### P2 — Nice to Have (NLP pipeline)
-12. ⬜ Streaming NLP job classifying reasons into topics
-13. ⬜ Synced Table: topic_analysis Delta → LakeBase
+12. ✅ **DONE** NLP topic classifier — `databricks/jobs/nlp_topic_classifier.py` (Claude Haiku via FMAPI, writes to LakeBase directly)
+13. N/A — Synced Table not needed (NLP writes directly to LakeBase via UC)
 14. ⬜ Topic-colored choropleth (color by topic, not just density)
 
 ### P3 — Polish
