@@ -209,6 +209,122 @@ app.get('/dashboard-token', async (req, res) => {
   }
 });
 
+// ── Genie API (natural language Q&A on event data) ──────────────────
+const GENIE_SPACE_ID = '01f110512fd015ada6b59c70c0ef42a6';
+
+// POST /genie/ask — start a Genie conversation and poll until complete
+app.post('/genie/ask', async (req, res) => {
+  const { question } = req.body;
+  if (!question || typeof question !== 'string' || question.trim().length < 3) {
+    return res.status(400).json({ error: 'question is required (min 3 chars)' });
+  }
+
+  try {
+    const token = await getSpToken();
+    const workspaceUrl = process.env.DATABRICKS_WORKSPACE_URL.replace(/\/$/, '');
+
+    // Step 1: Start conversation
+    const startRes = await fetch(
+      `${workspaceUrl}/api/2.0/genie/spaces/${GENIE_SPACE_ID}/start-conversation`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: question.trim() }),
+      }
+    );
+    if (!startRes.ok) {
+      const body = await startRes.text();
+      console.error(`Genie start-conversation failed (${startRes.status}):`, body);
+      return res.status(502).json({ error: 'Failed to start Genie conversation' });
+    }
+
+    const startData = await startRes.json();
+    const conversationId = startData.conversation_id;
+    const messageId = startData.message_id;
+
+    // Step 2: Poll for completion (max 60s, backoff from 1s to 3s)
+    let delay = 1000;
+    const maxPolls = 30;
+    let message = null;
+
+    for (let i = 0; i < maxPolls; i++) {
+      await new Promise((r) => setTimeout(r, delay));
+      if (delay < 3000) delay += 500;
+
+      const pollRes = await fetch(
+        `${workspaceUrl}/api/2.0/genie/spaces/${GENIE_SPACE_ID}/conversations/${conversationId}/messages/${messageId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!pollRes.ok) continue;
+
+      message = await pollRes.json();
+      if (message.status === 'COMPLETED' || message.status === 'FAILED') break;
+    }
+
+    if (!message || (message.status !== 'COMPLETED' && message.status !== 'FAILED')) {
+      return res.status(504).json({ error: 'Genie query timed out' });
+    }
+
+    if (message.status === 'FAILED') {
+      return res.status(502).json({ error: 'Genie query failed' });
+    }
+
+    // Step 3: Extract results from attachments
+    const attachments = message.attachments || [];
+    let answer = null;
+    let sql = null;
+    let queryResultAttachmentId = null;
+    let suggestedQuestions = [];
+
+    for (const a of attachments) {
+      if (a.text) answer = a.text.content;
+      if (a.query) {
+        sql = a.query.query;
+        queryResultAttachmentId = a.attachment_id;
+      }
+      if (a.suggested_questions) {
+        suggestedQuestions = a.suggested_questions.questions || [];
+      }
+    }
+
+    // Step 4: Fetch query result data if available
+    let columns = [];
+    let rows = [];
+    if (queryResultAttachmentId) {
+      try {
+        const resultRes = await fetch(
+          `${workspaceUrl}/api/2.0/genie/spaces/${GENIE_SPACE_ID}/conversations/${conversationId}/messages/${messageId}/query-result/${queryResultAttachmentId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (resultRes.ok) {
+          const resultData = await resultRes.json();
+          const sr = resultData.statement_response || {};
+          columns = (sr.manifest?.schema?.columns || []).map((c) => c.name);
+          rows = sr.result?.data_array || [];
+        }
+      } catch (e) {
+        console.error('Genie query-result fetch error:', e.message);
+      }
+    }
+
+    res.json({
+      answer,
+      sql,
+      columns,
+      rows,
+      suggested_questions: suggestedQuestions.slice(0, 3),
+      conversation_id: conversationId,
+      message_id: messageId,
+    });
+  } catch (err) {
+    console.error('Genie ask error:', err);
+    res.status(500).json({ error: 'Genie query failed' });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`NYC Demo API running on port ${PORT}`);
 });
