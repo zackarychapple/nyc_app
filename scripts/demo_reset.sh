@@ -2,13 +2,23 @@
 # demo_reset.sh — Clear all registrations from LakeBase before a demo
 #
 # Usage:
-#   ./scripts/demo_reset.sh                     # Uses Databricks OAuth (local dev)
-#   DATABASE_URL="postgresql://..." ./scripts/demo_reset.sh   # Uses connection string
+#   ./scripts/demo_reset.sh              # Truncate only (with confirmation)
+#   ./scripts/demo_reset.sh --seed       # Truncate + re-seed 25 fake registrations
+#   ./scripts/demo_reset.sh --seed -y    # Skip confirmation prompt
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+
+SEED=false
+YES=false
+for arg in "$@"; do
+  case "$arg" in
+    --seed) SEED=true ;;
+    -y|--yes) YES=true ;;
+  esac
+done
 
 echo "=== NYC Demo Reset ==="
 
@@ -32,16 +42,29 @@ echo ""
 echo "Current row count:"
 psql "$CONN" -t -c "SELECT COUNT(*) FROM event_registrations;"
 
-echo ""
-read -p "Are you sure you want to DELETE ALL registrations? (y/N) " -n 1 -r
-echo ""
-
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  psql "$CONN" -c "TRUNCATE TABLE event_registrations;"
-  echo "All registrations deleted."
+if [[ "$YES" == false ]]; then
   echo ""
-  echo "New row count:"
-  psql "$CONN" -t -c "SELECT COUNT(*) FROM event_registrations;"
+  if [[ "$SEED" == true ]]; then
+    read -p "DELETE ALL registrations and re-seed with 25 fake rows? (y/N) " -n 1 -r
+  else
+    read -p "Are you sure you want to DELETE ALL registrations? (y/N) " -n 1 -r
+  fi
+  echo ""
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Aborted."
+    exit 0
+  fi
+fi
+
+psql "$CONN" -c "TRUNCATE TABLE event_registrations;"
+echo "All registrations deleted."
+
+if [[ "$SEED" == true ]]; then
+  echo ""
+  echo "Re-seeding with 25 registrations..."
+  bash "$SCRIPT_DIR/seed_data.sh"
 else
-  echo "Aborted."
+  echo ""
+  echo "Table is empty. Run with --seed to insert fake data, or use:"
+  echo "  ./scripts/seed_data.sh"
 fi
