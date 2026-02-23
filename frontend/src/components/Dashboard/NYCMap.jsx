@@ -92,25 +92,26 @@ function NYCMap({ registrations = [] }) {
       </MapContainer>
 
       {/* Legend */}
-      <div className="flex items-center justify-center mt-3 space-x-4 text-xs text-gray-500">
+      <div className="flex flex-wrap items-center justify-center mt-3 gap-x-4 gap-y-1 text-xs text-gray-500">
+        <span className="font-medium text-gray-600 mr-1">Registrations:</span>
         <div className="flex items-center">
-          <span className="inline-block w-4 h-4 rounded mr-1" style={{ backgroundColor: '#EEEDE9' }}></span>
+          <span className="inline-block w-3.5 h-3.5 rounded-sm mr-1" style={{ backgroundColor: '#EEEDE9' }}></span>
           0
         </div>
         <div className="flex items-center">
-          <span className="inline-block w-4 h-4 rounded mr-1" style={{ backgroundColor: '#FFD4CC' }}></span>
+          <span className="inline-block w-3.5 h-3.5 rounded-sm mr-1" style={{ backgroundColor: '#FFD4CC' }}></span>
           1-2
         </div>
         <div className="flex items-center">
-          <span className="inline-block w-4 h-4 rounded mr-1" style={{ backgroundColor: '#FF7A5C' }}></span>
+          <span className="inline-block w-3.5 h-3.5 rounded-sm mr-1" style={{ backgroundColor: '#FF7A5C' }}></span>
           3-5
         </div>
         <div className="flex items-center">
-          <span className="inline-block w-4 h-4 rounded mr-1" style={{ backgroundColor: '#FF5F46' }}></span>
+          <span className="inline-block w-3.5 h-3.5 rounded-sm mr-1" style={{ backgroundColor: '#FF5F46' }}></span>
           6-10
         </div>
         <div className="flex items-center">
-          <span className="inline-block w-4 h-4 rounded mr-1" style={{ backgroundColor: '#FF3621' }}></span>
+          <span className="inline-block w-3.5 h-3.5 rounded-sm mr-1" style={{ backgroundColor: '#FF3621' }}></span>
           10+
         </div>
       </div>

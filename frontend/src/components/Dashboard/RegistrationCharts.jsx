@@ -118,21 +118,21 @@ function RecentResponsesTable({ registrations }) {
   }
 
   return (
-    <div className="overflow-x-auto max-h-72 overflow-y-auto">
+    <div className="overflow-x-auto max-h-80 overflow-y-auto rounded-lg">
       <table className="w-full text-sm text-left" style={{ minWidth: 400 }}>
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="py-2 px-3 text-navy-800 font-semibold whitespace-nowrap">Location</th>
-            <th className="py-2 px-3 text-navy-800 font-semibold">What Brought You Here?</th>
+        <thead className="sticky top-0 bg-oat-light">
+          <tr className="border-b-2 border-gray-200">
+            <th className="py-2.5 px-3 text-navy-800 font-semibold whitespace-nowrap text-xs uppercase tracking-wide">Location</th>
+            <th className="py-2.5 px-3 text-navy-800 font-semibold text-xs uppercase tracking-wide">What Brought You Here?</th>
           </tr>
         </thead>
         <tbody>
           {recent.map((r, i) => (
-            <tr key={r.user_id || i} className="border-b border-gray-100 hover:bg-oat-light">
-              <td className="py-2 px-3 text-gray-600 whitespace-nowrap">
+            <tr key={r.user_id || i} className={`border-b border-gray-100 hover:bg-lava-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-oat-light/50'}`}>
+              <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap font-medium">
                 {r.borough || r.state || 'Unknown'}
               </td>
-              <td className="py-2 px-3 text-gray-700 max-w-xs truncate">{r.reason}</td>
+              <td className="py-2.5 px-3 text-gray-700 max-w-xs truncate">{r.reason}</td>
             </tr>
           ))}
         </tbody>

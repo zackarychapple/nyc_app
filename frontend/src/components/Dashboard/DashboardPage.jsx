@@ -37,26 +37,32 @@ function DashboardPage() {
           See who's here and what they're excited about — powered by Databricks
         </p>
         {lastUpdated && (
-          <p className="text-xs text-gray-400 mt-1">
-            <i className="fas fa-sync-alt mr-1"></i>
-            Auto-refreshing every 10s — Last updated: {lastUpdated.toLocaleTimeString()}
+          <p className="text-xs text-gray-400 mt-2 inline-flex items-center justify-center">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            Live — updated {lastUpdated.toLocaleTimeString()}
           </p>
         )}
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-3 gap-2 md:gap-4 mb-6 md:mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 text-center">
-          <div className="text-2xl md:text-3xl font-bold text-lava-500">{registrations.length}</div>
-          <div className="text-xs md:text-sm text-gray-500">Total Registered</div>
+      <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-5 text-center">
+          <div className="text-lava-400 mb-1"><i className="fas fa-users text-lg md:text-xl"></i></div>
+          <div className="text-2xl md:text-4xl font-bold text-lava-500">{registrations.length}</div>
+          <div className="text-xs md:text-sm text-gray-500 mt-0.5">Total Registered</div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 text-center">
-          <div className="text-2xl md:text-3xl font-bold text-navy-900">{nycCount}</div>
-          <div className="text-xs md:text-sm text-gray-500">From NYC</div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-5 text-center">
+          <div className="text-navy-800 mb-1"><i className="fas fa-city text-lg md:text-xl"></i></div>
+          <div className="text-2xl md:text-4xl font-bold text-navy-900">{nycCount}</div>
+          <div className="text-xs md:text-sm text-gray-500 mt-0.5">From NYC</div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 text-center">
-          <div className="text-2xl md:text-3xl font-bold text-navy-800">{boroughCount}</div>
-          <div className="text-xs md:text-sm text-gray-500">Boroughs</div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-5 text-center">
+          <div className="text-navy-800 mb-1"><i className="fas fa-map-marker-alt text-lg md:text-xl"></i></div>
+          <div className="text-2xl md:text-4xl font-bold text-navy-800">{boroughCount}</div>
+          <div className="text-xs md:text-sm text-gray-500 mt-0.5">Boroughs</div>
         </div>
       </div>
 
@@ -107,11 +113,11 @@ function DashboardPage() {
       </section>
 
       {/* Databricks Branding */}
-      <div className="mt-6 text-center">
-        <p className="text-xs text-gray-400">
-          <i className="fas fa-database mr-1"></i>
+      <div className="mt-8 mb-4 text-center">
+        <div className="inline-flex items-center px-4 py-2 rounded-full bg-oat-medium text-xs text-gray-500">
+          <i className="fas fa-database mr-2 text-lava-400"></i>
           Data stored in Databricks LakeBase — Analytics powered by Unity Catalog
-        </p>
+        </div>
       </div>
     </main>
   );
