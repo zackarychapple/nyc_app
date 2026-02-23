@@ -22,13 +22,14 @@ _No active tasks. All P0/P1 work is complete. See backlog for future enhancement
 
 ### Task 13 frontend — Genie chat UI on dashboard page
 - **Owner:** Claude 1
-- **Status:** TODO
+- **Status:** DONE
 - **Priority:** P3
+- **Completed:** 2026-02-22
 - **Details:**
-  - Backend `POST /genie/ask` is DONE and deployed — accepts `{"question": "..."}`, returns `{answer, sql, columns, rows, suggested_questions}`
-  - Need: chat input box on dashboard, loading spinner, answer + data table display
-  - Suggested starter questions as clickable chips
-- **Acceptance criteria:** Users can ask natural language questions and see Genie answers on /dashboard
+  - Created `GenieChat.jsx` component with input, starter questions, loading state, answer + data table + SQL viewer + follow-up suggestions
+  - Added `askGenie()` to `api.js`, integrated into `DashboardPage.jsx`
+  - Verified: build passes, backend endpoint live on production
+- **Acceptance criteria:** Users can ask natural language questions and see Genie answers on /dashboard ✅
 
 ### Task 16 — Enhanced map: neighborhood boundaries + surrounding states
 - **Owner:** TBD (Claude 1 or Claude 3)

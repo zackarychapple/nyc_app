@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import NYCMap from './NYCMap';
 import { BoroughChart, LocationPieChart, RecentResponsesTable } from './RegistrationCharts';
 import EmbeddedDashboard from './EmbeddedDashboard';
+import GenieChat from './GenieChat';
 import { getRegistrations } from '../../services/api';
 
 const POLL_INTERVAL = 10000; // 10 seconds
@@ -101,6 +102,18 @@ function DashboardPage() {
           Databricks AI/BI Dashboard
         </h2>
         <EmbeddedDashboard />
+      </section>
+
+      {/* Ask Genie */}
+      <section className="bg-white rounded-xl shadow-md border border-gray-200 p-4 md:p-6 mb-6 md:mb-8">
+        <h2 className="text-lg md:text-xl font-bold text-navy-900 mb-4">
+          <i className="fas fa-hat-wizard mr-2 text-lava-500"></i>
+          Ask Genie
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Ask natural language questions about the event data — powered by Databricks Genie
+        </p>
+        <GenieChat />
       </section>
 
       {/* Recent Responses */}

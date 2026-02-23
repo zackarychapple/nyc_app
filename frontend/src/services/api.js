@@ -29,6 +29,25 @@ export async function submitRegistration(data) {
   return res.json();
 }
 
+export async function askGenie(question) {
+  if (!API_URL) {
+    return { answer: 'API not configured', sql: null, columns: [], rows: [], suggested_questions: [] };
+  }
+
+  const res = await fetch(`${API_URL}/genie/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(text || `Genie error: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export async function getRegistrations() {
   if (!API_URL) {
     return [];
