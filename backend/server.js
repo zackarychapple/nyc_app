@@ -118,27 +118,29 @@ app.get('/topics', async (req, res) => {
   }
 });
 
-// Service principal token cache for dashboard embedding
+// Dashboard embed token (3-step flow for external embedding)
+const DASHBOARD_ID = '01f1103d19bc175083fbb5392f987e10';
+
+// Cache for the SP all-apis token (used in step 1 & 2)
 let spToken = null;
 let spTokenExpiry = 0;
 
-async function getServicePrincipalToken() {
+// Cache for the scoped embed token (used by frontend)
+let embedToken = null;
+let embedTokenExpiry = 0;
+
+async function getSpToken() {
   const now = Date.now();
-  if (spToken && now < spTokenExpiry - 60_000) {
-    return spToken;
-  }
+  if (spToken && now < spTokenExpiry - 60_000) return spToken;
 
   const clientId = process.env.DATABRICKS_SP_CLIENT_ID;
   const clientSecret = process.env.DATABRICKS_SP_CLIENT_SECRET;
   const workspaceUrl = process.env.DATABRICKS_WORKSPACE_URL;
-
   if (!clientId || !clientSecret || !workspaceUrl) {
     throw new Error('Service principal credentials not configured');
   }
 
-  const tokenUrl = `${workspaceUrl.replace(/\/$/, '')}/oidc/v1/token`;
-
-  const res = await fetch(tokenUrl, {
+  const res = await fetch(`${workspaceUrl.replace(/\/$/, '')}/oidc/v1/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -148,11 +150,7 @@ async function getServicePrincipalToken() {
       scope: 'all-apis',
     }),
   });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Token request failed (${res.status}): ${body}`);
-  }
+  if (!res.ok) throw new Error(`SP token failed (${res.status}): ${await res.text()}`);
 
   const data = await res.json();
   spToken = data.access_token;
@@ -160,10 +158,50 @@ async function getServicePrincipalToken() {
   return spToken;
 }
 
-// GET /dashboard-token — mint a token for the embedded Databricks dashboard
+async function getEmbedToken() {
+  const now = Date.now();
+  if (embedToken && now < embedTokenExpiry - 120_000) return embedToken;
+
+  const clientId = process.env.DATABRICKS_SP_CLIENT_ID;
+  const clientSecret = process.env.DATABRICKS_SP_CLIENT_SECRET;
+  const workspaceUrl = process.env.DATABRICKS_WORKSPACE_URL.replace(/\/$/, '');
+
+  // Step 1: Get SP all-apis token
+  const allApisToken = await getSpToken();
+
+  // Step 2: Get tokeninfo (authorization_details + scope for embed)
+  const infoRes = await fetch(
+    `${workspaceUrl}/api/2.0/lakeview/dashboards/${DASHBOARD_ID}/published/tokeninfo?external_viewer_id=demo_viewer`,
+    { headers: { Authorization: `Bearer ${allApisToken}` } }
+  );
+  if (!infoRes.ok) throw new Error(`tokeninfo failed (${infoRes.status}): ${await infoRes.text()}`);
+  const tokenInfo = await infoRes.json();
+
+  // Step 3: Exchange for scoped embed token
+  const scopedRes = await fetch(`${workspaceUrl}/oidc/v1/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+      scope: tokenInfo.scope,
+      custom_claim: tokenInfo.custom_claim,
+      authorization_details: JSON.stringify(tokenInfo.authorization_details),
+    }),
+  });
+  if (!scopedRes.ok) throw new Error(`Scoped token failed (${scopedRes.status}): ${await scopedRes.text()}`);
+
+  const scopedData = await scopedRes.json();
+  embedToken = scopedData.access_token;
+  embedTokenExpiry = now + (scopedData.expires_in || 3600) * 1000;
+  return embedToken;
+}
+
+// GET /dashboard-token — mint a scoped embed token for the Databricks dashboard
 app.get('/dashboard-token', async (req, res) => {
   try {
-    const token = await getServicePrincipalToken();
+    const token = await getEmbedToken();
     res.json({ token });
   } catch (err) {
     console.error('Dashboard token error:', err);
