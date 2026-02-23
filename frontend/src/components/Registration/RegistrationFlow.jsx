@@ -63,21 +63,32 @@ function RegistrationFlow() {
       {/* Progress indicator */}
       {step < 4 && (
         <div className="flex items-center justify-center mb-10">
-          {[1, 2, 3].map((s) => (
-            <React.Fragment key={s}>
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                  s <= step
-                    ? 'bg-lava-500 text-white'
-                    : 'bg-oat-medium text-gray-400'
-                }`}
-              >
-                {s}
-              </div>
-              {s < 3 && (
+          {[
+            { num: 1, label: 'Location' },
+            { num: 2, label: 'Details' },
+            { num: 3, label: 'Submit' },
+          ].map(({ num, label }) => (
+            <React.Fragment key={num}>
+              <div className="flex flex-col items-center">
                 <div
-                  className={`w-16 h-0.5 mx-2 transition-all ${
-                    s < step ? 'bg-lava-500' : 'bg-oat-medium'
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    num < step
+                      ? 'bg-lava-500 text-white shadow-sm'
+                      : num === step
+                        ? 'bg-lava-500 text-white ring-4 ring-lava-100 shadow-sm'
+                        : 'bg-oat-medium text-gray-400'
+                  }`}
+                >
+                  {num < step ? <i className="fas fa-check text-xs"></i> : num}
+                </div>
+                <span className={`text-xs mt-1.5 font-medium transition-colors ${
+                  num <= step ? 'text-navy-900' : 'text-gray-400'
+                }`}>{label}</span>
+              </div>
+              {num < 3 && (
+                <div
+                  className={`w-12 md:w-16 h-0.5 mx-2 mb-5 transition-all duration-300 ${
+                    num < step ? 'bg-lava-500' : 'bg-oat-medium'
                   }`}
                 />
               )}
@@ -94,7 +105,7 @@ function RegistrationFlow() {
 
       {step === 2 && formData.locationType === 'ny_state' && (
         <div className="text-center">
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
             <div className="text-5xl mb-4">🗽</div>
             <h2 className="text-2xl font-bold text-navy-900 mb-3">New York State</h2>
             <p className="text-gray-600 mb-6">
@@ -103,13 +114,13 @@ function RegistrationFlow() {
             <div className="flex justify-center space-x-3">
               <button
                 onClick={() => setStep(1)}
-                className="px-6 py-3 rounded-lg font-medium border-2 border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-6 py-3 rounded-lg font-medium border-2 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
               >
                 Back
               </button>
               <button
                 onClick={handleNYStateNext}
-                className="px-6 py-3 rounded-lg font-medium bg-lava-500 text-white hover:bg-lava-600 transition-colors"
+                className="px-6 py-3 rounded-lg font-semibold bg-lava-500 text-white hover:bg-lava-600 hover:shadow-md active:shadow-sm transition-all"
               >
                 Continue
               </button>
