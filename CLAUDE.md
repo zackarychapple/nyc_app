@@ -120,7 +120,7 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
   - Default domain: `dx7u5ga7qr7e7.amplifyapp.com`
   - Custom domain: `dbxdemonyc.com`
   - Build: `npm install` → `npm run build` → serves `build/`
-  - Env var needed: `REACT_APP_API_URL` → set to backend URL once deployed
+  - Env var: `REACT_APP_API_URL=https://main.d1erxf8q87xlvj.amplifyapp.com`
 - **Backend Amplify App:** `d1erxf8q87xlvj` (WEB_COMPUTE)
   - URL: `https://main.d1erxf8q87xlvj.amplifyapp.com`
   - Env vars set: `DATABASE_URL`, `DATABRICKS_WORKSPACE_URL`, `DATABRICKS_SP_CLIENT_ID`, `DATABRICKS_SP_CLIENT_SECRET`, `PORT`
@@ -159,7 +159,8 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 - **Dashboard URL:** `https://dbc-eca83c32-b44b.cloud.databricks.com/dashboardsv3/01f1103d19bc175083fbb5392f987e10`
 - **Widgets:** Counter (total), Pie (location type), Area (activity over time), Bar (by borough), Table (recent responses)
 - **Data Source:** All queries hit `nyc_demo_lakebase.public.event_registrations` (federated from LakeBase)
-- **Embed method:** `@databricks/aibi-client` SDK in `EmbeddedDashboard.jsx` — fetches SP token from backend `GET /dashboard-token`, then renders natively in the React app (no iframe)
+- **Embed method:** `@databricks/aibi-client` SDK in `EmbeddedDashboard.jsx` — fetches scoped embed token from backend `GET /dashboard-token` (3-step flow: SP token → tokeninfo → scoped embed token), then renders natively in the React app
+- **Domain allowlist:** `dbxdemonyc.com`, `www.dbxdemonyc.com`, `main.dx7u5ga7qr7e7.amplifyapp.com` added to workspace setting `aibi_dash_embed_ws_apprvd_domains`
 
 ### Service Principal (Dashboard Embed Auth)
 - **Name:** `nyc-demo-dashboard-embed`
@@ -168,11 +169,15 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 - **Secret expires:** 2028-02-22
 - **Permissions granted:**
   - `CAN_USE` on SQL warehouse `00561e6c134511ad`
-  - `CAN_READ` on dashboard `01f1103d19bc175083fbb5392f987e10`
+  - `CAN_RUN` on dashboard `01f1103d19bc175083fbb5392f987e10`
   - `USE CATALOG` on `nyc_demo_lakebase`
   - `USE SCHEMA` on `nyc_demo_lakebase.public`
   - `SELECT` on `nyc_demo_lakebase.public.event_registrations`
-- **Token flow:** Backend calls `POST https://dbc-eca83c32-b44b.cloud.databricks.com/oidc/v1/token` with client credentials → returns 1hr access token → frontend uses it with AIBI SDK
+- **Token flow (3-step for external embedding):**
+  1. Backend gets SP all-apis token via `POST /oidc/v1/token` (client credentials)
+  2. Backend calls `GET /api/2.0/lakeview/dashboards/{id}/published/tokeninfo?external_viewer_id=demo_viewer` to get `authorization_details` + `scope`
+  3. Backend exchanges for scoped embed token via `POST /oidc/v1/token` with `authorization_details` + `scope` + `custom_claim`
+  4. Frontend receives scoped token and passes it to AIBI SDK
 - **Verified working:** SP can query LakeBase data and access the dashboard
 - **Also granted:** `CAN_RUN` on Genie space, `CAN_USE` on Genie warehouse `e5f11d721479f35a`
 
@@ -185,7 +190,7 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
 - **Response time:** ~5-15 seconds
 - **Verified on production:** "How many total registrations?" → "34 registrations" with SQL and data
 
-### Backend API (Code DONE, Deployment PENDING)
+### Backend API (DEPLOYED AND WORKING)
 - **Location:** `backend/` directory
 - **Stack:** Express.js + pg (node-postgres)
 - **Port:** 3001 (local), auto-assigned on Amplify
@@ -245,10 +250,7 @@ frontend:
 **Env vars set on backend Amplify app (`d1erxf8q87xlvj`):**
 All set at app and branch level: `DATABASE_URL`, `DATABRICKS_WORKSPACE_URL`, `DATABRICKS_SP_CLIENT_ID`, `DATABRICKS_SP_CLIENT_SECRET`, `PORT`
 
-**Next step:**
-1. Set `REACT_APP_API_URL=https://main.d1erxf8q87xlvj.amplifyapp.com` on frontend Amplify app (`dx7u5ga7qr7e7`)
-2. Trigger frontend rebuild
-3. Test end-to-end: registration → LakeBase → dashboard charts + map
+**Status: FULLY OPERATIONAL** — all endpoints verified (health, registrations, dashboard-token, genie/ask)
 
 ### Important Note on Bi-Directional Sync
 
@@ -374,7 +376,7 @@ nyc_app/
 │   ├── seed_data.sh                  # Insert 25 realistic fake registrations
 │   ├── setup.sh                      # ⬜ TODO
 │   └── teardown.sh                   # ⬜ TODO
-└── README.md                          # ⬜ TODO
+└── README.md                          # ✅ Built
 ```
 
 ---
@@ -645,7 +647,7 @@ PORT=3001
 
 ### Frontend (Amplify env vars — baked into build)
 ```env
-REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com  # Set once backend is deployed
+REACT_APP_API_URL=https://main.d1erxf8q87xlvj.amplifyapp.com
 ```
 
 ---
@@ -661,7 +663,7 @@ REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com  # Set once backend is d
 6. ✅ **DONE** Service Principal for public dashboard embedding
 7. ✅ **DONE** Register LakeBase in UC — catalog `nyc_demo_lakebase`
 8. ✅ **DONE** Deploy backend to Amplify WEB_COMPUTE — live at `https://main.d1erxf8q87xlvj.amplifyapp.com`
-9. **🔴 BLOCKER** Set `REACT_APP_API_URL` on frontend Amplify + rebuild — depends on #8
+9. ✅ **DONE** Set `REACT_APP_API_URL` on frontend Amplify + rebuild + end-to-end verified
 
 ### P1 — Should Have (makes demo impressive)
 10. ✅ **DONE** Demo reset script — `scripts/demo_reset.sh` (TRUNCATE with confirmation prompt)
@@ -672,9 +674,17 @@ REACT_APP_API_URL=https://d1erxf8q87xlvj.amplifyapp.com  # Set once backend is d
 13. N/A — Synced Table not needed (NLP writes directly to LakeBase via UC)
 14. ⬜ Topic-colored choropleth (color by topic, not just density)
 
-### P3 — Polish
-15. ⬜ Teardown script
-16. ⬜ Comprehensive README for reproducibility
+### P1 — Pre-sharing
+15. ✅ **DONE** Security audit — no secrets in tracked files or git history
+16. ✅ **DONE** AIBI dashboard embed verified + fixed (3-step token flow, SP permissions, domain allowlist)
+17. ✅ **DONE** Mobile responsiveness polish
+18. ✅ **DONE** Comprehensive README
+
+### P3 — Future / Post-demo
+19. ⬜ Genie chat UI on dashboard (backend ready)
+20. ⬜ Enhanced map: neighborhood-level boundaries
+21. ⬜ Topic-colored choropleth
+22. ⬜ Teardown script
 
 ---
 
