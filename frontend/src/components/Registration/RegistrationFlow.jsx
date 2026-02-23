@@ -59,10 +59,10 @@ function RegistrationFlow() {
   };
 
   return (
-    <main className="max-w-3xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <main className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-12">
       {/* Progress indicator */}
       {step < 4 && (
-        <div className="flex items-center justify-center mb-10">
+        <div className="flex items-center justify-center mb-6 md:mb-10">
           {[
             { num: 1, label: 'Location' },
             { num: 2, label: 'Details' },
@@ -105,22 +105,22 @@ function RegistrationFlow() {
 
       {step === 2 && formData.locationType === 'ny_state' && (
         <div className="text-center">
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5 md:p-8">
             <div className="text-5xl mb-4">🗽</div>
-            <h2 className="text-2xl font-bold text-navy-900 mb-3">New York State</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-navy-900 mb-3">New York State</h2>
+            <p className="text-gray-600 mb-6 text-sm md:text-base">
               We're focused on NYC neighborhoods for our map, but we're glad you're here!
             </p>
-            <div className="flex justify-center space-x-3">
+            <div className="flex flex-col-reverse md:flex-row md:justify-center gap-2 md:gap-0 md:space-x-3">
               <button
                 onClick={() => setStep(1)}
-                className="px-6 py-3 rounded-lg font-medium border-2 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
+                className="w-full md:w-auto px-6 py-3.5 md:py-3 rounded-lg font-medium border-2 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all text-center"
               >
                 Back
               </button>
               <button
                 onClick={handleNYStateNext}
-                className="px-6 py-3 rounded-lg font-semibold bg-lava-500 text-white hover:bg-lava-600 hover:shadow-md active:shadow-sm transition-all"
+                className="w-full md:w-auto px-6 py-3.5 md:py-3 rounded-lg font-semibold bg-lava-500 text-white hover:bg-lava-600 hover:shadow-md active:shadow-sm transition-all text-center"
               >
                 Continue
               </button>
