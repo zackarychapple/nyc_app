@@ -18,42 +18,14 @@ _No active tasks. All P0/P1 work is complete. See backlog for future enhancement
 
 ---
 
-## Backlog (P3)
-
-### Task 13 frontend — Genie chat UI on dashboard page
-- **Owner:** Claude 1
-- **Status:** DONE
-- **Priority:** P3
-- **Completed:** 2026-02-22
-- **Details:**
-  - Created `GenieChat.jsx` component with input, starter questions, loading state, answer + data table + SQL viewer + follow-up suggestions
-  - Added `askGenie()` to `api.js`, integrated into `DashboardPage.jsx`
-  - Verified: build passes, backend endpoint live on production
-- **Acceptance criteria:** Users can ask natural language questions and see Genie answers on /dashboard ✅
-
-### Task 16 — Enhanced map: neighborhood boundaries + surrounding states
-- **Owner:** Claude 1
-- **Status:** DONE
-- **Priority:** P3
-- **Completed:** 2026-02-22
-- **Details:**
-  - Rewrote `NYCMap.jsx` with 3-layer architecture: surrounding states (bottom) → 197 NTA neighborhood polygons (middle) → borough outlines (top)
-  - Created `neighborhoodToNtaMap.js` mapping 60 curated names → NTA GeoJSON feature names
-  - Created `surrounding_states.geojson` (NY, NJ, CT, PA, MA — 110KB, Census 500k resolution)
-  - Lava gradient for neighborhoods, muted navy for states, two-row legend
-  - Dynamic style updates via ref+setStyle (no flicker on poll refresh)
-  - `minZoom={7}` allows zooming out to see tri-state area
-- **Acceptance criteria:** 197 neighborhood polygons colored by density, borough outlines visible, surrounding states visible when zoomed out, legend updated ✅
+## Backlog (Future / Post-Demo)
 
 ### Topic-colored choropleth on map
-- **Owner:** TBD
 - **Status:** ROADMAP
-- **Priority:** P3
 - **Details:** Color the NYC map by dominant topic per borough instead of just registration density. Depends on NLP pipeline (Task 12, done) populating `registration_topics`.
 
 ### Teardown script
 - Clean up all infrastructure after the event
-- Low priority — do after demo
 
 ---
 
@@ -78,4 +50,6 @@ _No active tasks. All P0/P1 work is complete. See backlog for future enhancement
 | 15 | Polish dashboard page layout and spacing | Claude 3 | 2026-02-22 | Stats bar balanced, consistent section gaps, clean table styling, professional layout |
 | 17 | Security audit: scan repo for secrets | Claude 1 | 2026-02-22 | Clean — no secrets in tracked files or git history. `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, `*.png`. |
 | 16 | Enhanced map: neighborhood boundaries + surrounding states | Claude 1 | 2026-02-22 | 3-layer map: 197 NTA neighborhoods + borough outlines + tri-state. `neighborhoodToNtaMap.js`, `surrounding_states.geojson` |
+| 13f | Genie chat UI on dashboard | Claude 1 | 2026-02-22 | `GenieChat.jsx` — input, starter questions, data table, SQL viewer, follow-ups |
+| 16 | Enhanced map: neighborhoods + states | Claude 1 | 2026-02-22 | 3-layer map: 197 NTA neighborhoods + borough outlines + tri-state |
 | 18 | Write comprehensive README | Claude 1 | 2026-02-22 | Architecture diagram, tech stack, getting started, deployment, API reference, demo playbook |

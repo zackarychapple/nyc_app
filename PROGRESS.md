@@ -119,10 +119,59 @@
 - `minZoom={7}` allows zooming out to see surrounding states
 - Verified: build passes, dev server renders all 3 layers, no console errors, tooltips show borough + count
 
-### 2026-02-22 — Coordinator Review
+### 2026-02-22 — Claude 3 (UI Polish)
 
-**Findings from status check:**
-- Backend reads work, writes work (tested via curl)
-- Frontend has NO `REACT_APP_API_URL` set — all API calls are no-ops (returns [] for reads, logs to console for writes)
-- Backend missing 3 SP env vars — `/dashboard-token` will fail
-- Both agent branches (claude-1, claude-2) were stale/behind main — no active divergent work
+**Task 9: Mobile responsiveness**
+- Responsive Tailwind classes on Header, LocationSelector, DashboardPage, RegistrationCharts, EmbeddedDashboard
+- Tested at 375px viewport
+
+**Task 14: Registration flow polish**
+- Hover states, lava accents, smooth transitions on all steps
+- Character count indicator on ReasonInput
+- Consistent design system colors and spacing
+
+**Task 15: Dashboard layout polish**
+- Stats bar balanced with icons
+- Consistent section gaps, clean table styling
+- Live update indicator, professional layout
+
+### 2026-02-22 — Claude 1 (Frontend — continued)
+
+**Task 8: AIBI Dashboard embed fixed**
+- Fixed 3 issues to get the embedded Databricks dashboard rendering:
+  1. SP needed `CAN_RUN` permission (not just `CAN_READ`)
+  2. Implemented 3-step scoped embed token flow (all-apis token → tokeninfo → scoped embed token)
+  3. Added `dbxdemonyc.com` to workspace `aibi_dash_embed_ws_apprvd_domains` allowlist
+- Dashboard now renders inline with all chart widgets
+- Container height set to 800px (later reduced to 530px)
+
+**Task 18: README written**
+- Comprehensive README.md with: architecture diagram, tech stack table, features list, getting started guide, API reference, deployment guide with Amplify gotchas, Databricks setup, demo day playbook, troubleshooting table, project structure
+- MIT license
+
+### 2026-02-22/23 — Coordinator Review & Wrap-up
+
+**Initial status check findings (early session):**
+- Backend reads and writes confirmed working via curl
+- Frontend had NO `REACT_APP_API_URL` set — fixed by Claude 1
+- Backend was missing 3 SP env vars — fixed by Claude 2
+- Both agent branches (claude-1, claude-2) were stale/behind main — rebased
+
+**Multi-agent workflow improvements implemented:**
+- Created TASKS.md as single source of truth for task assignments
+- Created PROGRESS.md as audit trail with verification proof
+- Added agent workflow rules to CLAUDE.md
+- Added Claude 3 role (UI polish only) with strict boundaries
+
+**Infrastructure cost analysis (end of session):**
+- Databricks: ~$2-4/day active, near-zero idle (SQL Warehouse auto-stops)
+  - Feb 22: $3.65 (SQL Warehouse $2.37, Jobs $1.04, LakeBase $0.18)
+  - Feb total (all-time): ~82 DBUs ≈ $50-55
+- AWS: <$7/mo total (Amplify Static + WEB_COMPUTE + Route 53)
+- No overnight cost risk — SQL Warehouse auto-stops after 10min, LakeBase autoscaling idles
+
+**Final state — all P0/P1/P2/P3 tasks complete:**
+- 18 tasks completed across 3 agents in a single session
+- Live at dbxdemonyc.com with full end-to-end flow
+- No secrets in repo (security audit clean)
+- README ready for open-source sharing
