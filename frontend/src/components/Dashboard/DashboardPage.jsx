@@ -52,7 +52,7 @@ function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-5 text-center">
           <div className="text-lava-400 mb-1"><i className="fas fa-users text-lg md:text-xl"></i></div>
           <div className="text-2xl md:text-4xl font-bold text-lava-500">{registrations.length}</div>
-          <div className="text-xs md:text-sm text-gray-500 mt-0.5">Total Registered</div>
+          <div className="text-xs md:text-sm text-gray-500 mt-0.5"><span className="hidden sm:inline">Total </span>Registered</div>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-5 text-center">
           <div className="text-navy-800 mb-1"><i className="fas fa-city text-lg md:text-xl"></i></div>
@@ -114,9 +114,9 @@ function DashboardPage() {
 
       {/* Databricks Branding */}
       <div className="mt-8 mb-4 text-center">
-        <div className="inline-flex items-center px-4 py-2 rounded-full bg-oat-medium text-xs text-gray-500">
-          <i className="fas fa-database mr-2 text-lava-400"></i>
-          Data stored in Databricks LakeBase — Analytics powered by Unity Catalog
+        <div className="inline-flex items-center px-4 py-2 rounded-full bg-oat-medium text-xs text-gray-500 text-center">
+          <i className="fas fa-database mr-2 text-lava-400 flex-shrink-0"></i>
+          <span>Powered by Databricks LakeBase <span className="hidden sm:inline">&amp; Unity Catalog</span></span>
         </div>
       </div>
     </main>

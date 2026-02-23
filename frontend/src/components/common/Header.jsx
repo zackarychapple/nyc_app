@@ -20,9 +20,8 @@ function Header() {
                   : 'text-navy-800 hover:bg-oat-medium'
               }`}
             >
-              <i className="fas fa-user-plus md:mr-2"></i>
-              <span className="hidden md:inline"> Register</span>
-              <span className="md:hidden ml-1">Register</span>
+              <i className="fas fa-user-plus mr-1.5 md:mr-2"></i>
+              <span>Register</span>
             </Link>
             <Link
               to="/dashboard"
@@ -32,9 +31,9 @@ function Header() {
                   : 'text-navy-800 hover:bg-oat-medium'
               }`}
             >
-              <i className="fas fa-chart-bar md:mr-2"></i>
-              <span className="hidden md:inline"> Live Dashboard</span>
-              <span className="md:hidden ml-1">Dashboard</span>
+              <i className="fas fa-chart-bar mr-1.5 md:mr-2"></i>
+              <span className="hidden md:inline">Live Dashboard</span>
+              <span className="md:hidden">Dashboard</span>
             </Link>
           </nav>
         </div>

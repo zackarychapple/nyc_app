@@ -59,7 +59,7 @@ function RegistrationFlow() {
   };
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12">
+    <main className="max-w-3xl mx-auto px-4 md:px-6 py-8 md:py-12">
       {/* Progress indicator */}
       {step < 4 && (
         <div className="flex items-center justify-center mb-10">

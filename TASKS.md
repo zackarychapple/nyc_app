@@ -47,7 +47,7 @@
 
 ### Task 9 — Mobile responsiveness check and polish
 - **Owner:** Claude 3
-- **Status:** TODO
+- **Status:** DONE
 - **Priority:** P1
 - **Details:**
   - Test registration flow at 375px: cards stack vertically, dropdowns full-width, textarea usable
@@ -72,7 +72,7 @@
 
 ### Task 15 — Polish dashboard page layout and spacing
 - **Owner:** Claude 3
-- **Status:** IN PROGRESS
+- **Status:** DONE
 - **Priority:** P1
 - **Details:**
   - Stats bar: visually balanced, large readable numbers

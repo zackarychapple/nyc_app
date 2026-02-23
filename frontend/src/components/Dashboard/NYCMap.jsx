@@ -69,7 +69,7 @@ function NYCMap({ registrations = [] }) {
   };
 
   return (
-    <div style={{ height: 450, width: '100%' }}>
+    <div className="h-[300px] md:h-[450px] w-full">
       <MapContainer
         center={NYC_CENTER}
         zoom={NYC_ZOOM}
