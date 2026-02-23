@@ -12,47 +12,9 @@
 
 ---
 
-## Active Tasks — Claude 1 (Frontend)
+## Active Tasks
 
-### Task 8 — Verify AIBI dashboard embed is rendering on production
-- **Owner:** Claude 1
-- **Status:** TODO
-- **Priority:** P1
-- **Details:**
-  - Visit `https://dbxdemonyc.com/dashboard` and scroll to "Databricks AI/BI Dashboard" section
-  - The component fetches an SP token from `/dashboard-token` (confirmed working) then uses `@databricks/aibi-client` SDK
-  - Check if the dashboard renders inline or shows the fallback placeholder
-  - If fallback shows, check browser console for errors (CORS on workspace, token scope, SDK init)
-  - If embed can't be fixed easily, add a direct link fallback to the published dashboard
-- **Acceptance criteria:** Databricks dashboard renders inline on /dashboard showing registration data
-- **Fallback URL:** `https://dbc-eca83c32-b44b.cloud.databricks.com/dashboardsv3/01f1103d19bc175083fbb5392f987e10`
-
-### Task 9 — Mobile responsiveness check and polish
-- **Owner:** Claude 1
-- **Status:** TODO
-- **Priority:** P1
-- **Details:**
-  - Test registration flow at 375px width: cards stack, dropdowns full-width, textarea usable
-  - Test dashboard at 375px: stats bar (3-col might be too tight), map zoomable, charts scale, table scrollable
-  - Fix any overflow/cut-off issues
-- **Acceptance criteria:** Registration + dashboard usable on phone-sized screen (375px) with no overflow
-
----
-
-## Active Tasks — Claude 2 (Backend/Infra)
-
-### Task 17 — Security audit: scan repo for exposed secrets and vulnerabilities
-- **Owner:** Claude 2
-- **Status:** TODO
-- **Priority:** P0 (before sharing repo widely)
-- **Details:**
-  - Scan full git history for leaked passwords, secrets, connection strings
-  - Scan all current tracked files for secret patterns
-  - Verify `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, etc.
-  - Check CLAUDE.md doesn't contain actual secret values (placeholders OK)
-  - If secrets found in history: rotate credentials, update Amplify env vars, verify endpoints
-- **Preliminary finding (coordinator):** `app.yaml` was never committed. No actual secrets in tracked files or history. Full pass needed to confirm.
-- **Acceptance criteria:** No secrets in tracked files or git history. Credentials rotated if anything found.
+_No active tasks — all P0/P1 work is complete._
 
 ---
 
@@ -92,3 +54,6 @@
 | 11 | Create Databricks notebook demo reset | Claude 2 | 2026-02-22 | `databricks/notebooks/demo_reset.py` — uses UC catalog, SEED_DATA toggle |
 | 12 | Build NLP topic classification pipeline | Claude 2 | 2026-02-22 | `databricks/jobs/nlp_topic_classifier.py` — Claude Haiku via FMAPI, writes to topic_analysis + registration_topics |
 | 13 | Genie API backend endpoint | Claude 2 | 2026-02-22 | `POST /genie/ask` — proxies to Databricks Genie, returns answer + SQL + data. SP granted CAN_RUN on Genie space. Verified on production. |
+| 8 | Verify AIBI dashboard embed on production | Claude 1 | 2026-02-22 | Fixed 3 issues: SP CAN_RUN permission, 3-step scoped embed token flow, domain allowlist (`dbxdemonyc.com` added to `aibi_dash_embed_ws_apprvd_domains`). Dashboard renders inline with all charts. |
+| 9 | Mobile responsiveness check and polish | Claude 1 | 2026-02-22 | Responsive Tailwind classes on Header, LocationSelector, DashboardPage, RegistrationCharts, EmbeddedDashboard. Tested at 375px. |
+| 17 | Security audit: scan repo for secrets | Claude 1 | 2026-02-22 | Clean — no secrets in tracked files or git history. `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, `*.png`. SP secret and DB password confirmed absent from all commits. |
