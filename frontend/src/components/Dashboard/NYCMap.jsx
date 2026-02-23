@@ -1,7 +1,9 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { MapContainer, TileLayer, GeoJSON, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import neighborhoodToNtaMap from '../../data/neighborhoodToNtaMap';
+
+const STATES_ZOOM_THRESHOLD = 10; // Hide states layer when zoom >= this
 
 const NYC_CENTER = [40.7128, -73.97];
 const NYC_ZOOM = 11;
@@ -20,6 +22,34 @@ function getStateColor(count) {
   if (count === 0) return '#E8ECF0';
   if (count <= 3) return '#C5D0DB';
   return '#8FA3B5';
+}
+
+// Toggles states layer visibility based on zoom level
+function ZoomWatcher({ statesRef }) {
+  const updateVisibility = useCallback((zoom) => {
+    if (!statesRef.current) return;
+    const container = statesRef.current.getPane?.('overlayPane') || statesRef.current._map?.getPane('overlayPane');
+    // Toggle each layer's opacity based on zoom
+    statesRef.current.eachLayer((layer) => {
+      if (zoom >= STATES_ZOOM_THRESHOLD) {
+        layer.setStyle({ fillOpacity: 0, opacity: 0 });
+      } else {
+        layer.setStyle({ fillOpacity: 0.5, opacity: 0.6 });
+      }
+    });
+  }, [statesRef]);
+
+  useMapEvents({
+    zoomend: (e) => updateVisibility(e.target.getZoom()),
+    layeradd: () => {
+      // Re-check after states layer is first added
+      if (statesRef.current?._map) {
+        updateVisibility(statesRef.current._map.getZoom());
+      }
+    },
+  });
+
+  return null;
 }
 
 function NYCMap({ registrations = [] }) {
@@ -94,15 +124,18 @@ function NYCMap({ registrations = [] }) {
     }
   }, [ntaCounts]);
 
-  // Update state styles when registrations change
+  // Update state styles when registrations change (only colors, preserve zoom-based visibility)
   useEffect(() => {
     if (statesRef.current) {
+      const zoom = statesRef.current._map?.getZoom() || NYC_ZOOM;
+      const visible = zoom < STATES_ZOOM_THRESHOLD;
       statesRef.current.eachLayer((layer) => {
         const name = layer.feature.properties.name;
         const count = stateCounts[name] || 0;
         layer.setStyle({
           fillColor: getStateColor(count),
-          fillOpacity: 0.5,
+          fillOpacity: visible ? 0.5 : 0,
+          opacity: visible ? 0.6 : 0,
         });
         layer.setTooltipContent(
           `<strong>${name}</strong><br/>${count} registration${count !== 1 ? 's' : ''}`
@@ -112,14 +145,15 @@ function NYCMap({ registrations = [] }) {
   }, [stateCounts]);
 
   // --- Layer 1 (bottom): Surrounding states ---
+  // Starts hidden since default zoom (11) >= threshold (10)
   const stateStyle = (feature) => {
     const count = stateCounts[feature.properties.name] || 0;
     return {
       fillColor: getStateColor(count),
       weight: 1,
-      opacity: 0.6,
+      opacity: 0,
       color: '#8FA3B5',
-      fillOpacity: 0.5,
+      fillOpacity: 0,
     };
   };
 
@@ -131,8 +165,18 @@ function NYCMap({ registrations = [] }) {
       { sticky: true }
     );
     layer.on({
-      mouseover: (e) => e.target.setStyle({ fillOpacity: 0.7, weight: 1.5 }),
-      mouseout: (e) => e.target.setStyle({ fillOpacity: 0.5, weight: 1 }),
+      mouseover: (e) => {
+        const zoom = e.target._map?.getZoom() || NYC_ZOOM;
+        if (zoom < STATES_ZOOM_THRESHOLD) {
+          e.target.setStyle({ fillOpacity: 0.7, weight: 1.5 });
+        }
+      },
+      mouseout: (e) => {
+        const zoom = e.target._map?.getZoom() || NYC_ZOOM;
+        if (zoom < STATES_ZOOM_THRESHOLD) {
+          e.target.setStyle({ fillOpacity: 0.5, weight: 1 });
+        }
+      },
     });
   };
 
@@ -191,6 +235,7 @@ function NYCMap({ registrations = [] }) {
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
+        <ZoomWatcher statesRef={statesRef} />
 
         {/* Layer 1: Surrounding states (bottom) */}
         {statesGeo && (
