@@ -174,6 +174,16 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
   - `SELECT` on `nyc_demo_lakebase.public.event_registrations`
 - **Token flow:** Backend calls `POST https://dbc-eca83c32-b44b.cloud.databricks.com/oidc/v1/token` with client credentials → returns 1hr access token → frontend uses it with AIBI SDK
 - **Verified working:** SP can query LakeBase data and access the dashboard
+- **Also granted:** `CAN_RUN` on Genie space, `CAN_USE` on Genie warehouse `e5f11d721479f35a`
+
+### Databricks Genie (Natural Language Q&A)
+- **Genie Room:** `01f110512fd015ada6b59c70c0ef42a6` ("DBX Demo NYC Genie")
+- **Warehouse:** `e5f11d721479f35a`
+- **Backend endpoint:** `POST /genie/ask` — accepts `{"question":"..."}`, proxies to Genie Conversation API
+- **Response format:** `{answer, sql, columns, rows, suggested_questions, conversation_id, message_id}`
+- **Auth:** SP all-apis token (same SP as dashboard embed)
+- **Response time:** ~5-15 seconds
+- **Verified on production:** "How many total registrations?" → "34 registrations" with SQL and data
 
 ### Backend API (Code DONE, Deployment PENDING)
 - **Location:** `backend/` directory
@@ -186,6 +196,7 @@ NYC Founders learning how to build with AI on Databricks. Keep the UX clean, mod
   - `GET /registrations/stats` — aggregated borough/neighborhood counts
   - `GET /topics` — fetch topic analysis (from NLP pipeline)
   - `GET /dashboard-token` — mint SP OAuth token for embedded dashboard
+  - `POST /genie/ask` — natural language Q&A via Databricks Genie (`{"question":"..."}` → `{answer, sql, columns, rows, suggested_questions}`)
 - **DB connection:** `DATABASE_URL` env var (native PG role `nyc_app` with password) OR `LAKEBASE_AUTH=oauth` for local dev with Databricks CLI
 - **CORS:** Allows `dbxdemonyc.com`, `www.dbxdemonyc.com`, `dx7u5ga7qr7e7.amplifyapp.com`, `localhost:3000`
 - **Run locally:** `cd backend && npm install && node server.js`

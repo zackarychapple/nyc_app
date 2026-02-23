@@ -86,37 +86,60 @@
 
 ---
 
+## Active Tasks — Claude 1 (continued)
+
+### Task 18 — Write comprehensive README for open-source sharing
+- **Owner:** Claude 1
+- **Status:** TODO
+- **Priority:** P1 (before sharing repo widely)
+- **Details:**
+  - This repo will be shared as an open-source learning resource. README should let any developer clone, understand, and deploy the full stack.
+  - **Sections to include:**
+    1. Hero: title, one-liner, screenshot, badges (Live Demo, License, Databricks)
+    2. Screenshots: registration flow, dashboard with data, AIBI embed, Genie Q&A — save to `docs/screenshots/`
+    3. Architecture diagram: clean visual (Mermaid or image) showing Frontend → Backend → LakeBase → UC → Dashboard
+    4. Tech stack table: Layer | Technology | Why
+    5. Features list: registration wizard, real-time map, charts, AIBI embed, NLP topics, Genie Q&A
+    6. Getting Started: prerequisites, clone, LakeBase setup, table DDL, UC registration, .env config, run locally
+    7. Deployment: Amplify WEB_COMPUTE buildspec + gotchas, frontend static deploy, Route 53 custom domain
+    8. Databricks Setup: AI/BI dashboard, Service Principal, NLP notebook, Genie room
+    9. API Reference: table of all endpoints with request/response examples
+    10. Demo Day Playbook: how to reset, seed, what to show, troubleshooting
+    11. License + Credits
+  - **Tone:** Developer-friendly, educational, not corporate
+  - Take actual screenshots of the running app (desktop + mobile)
+- **Acceptance criteria:** A developer who has never seen this project can clone it, understand the architecture, and get it running locally
+
+---
+
 ## Active Tasks — Claude 2 (Backend/Infra)
 
-_All current tasks complete. See Backlog for future work._
+### Task 17 — Security audit: scan repo for exposed secrets and vulnerabilities
+- **Owner:** Claude 2
+- **Status:** TODO
+- **Priority:** P0 (before sharing repo widely)
+- **Details:**
+  - Scan full git history for leaked passwords, secrets, connection strings
+  - Scan all current tracked files for secret patterns
+  - Verify `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, etc.
+  - Check CLAUDE.md doesn't contain actual secret values (placeholders OK)
+  - If secrets found in history: rotate credentials, update Amplify env vars, verify endpoints
+- **Preliminary finding (coordinator):** `app.yaml` was never committed. No actual secrets in tracked files or history. Full pass needed to confirm.
+- **Acceptance criteria:** No secrets in tracked files or git history. Credentials rotated if anything found.
 
 ---
 
 ## Backlog (P3)
 
-### Task 13 — Genie API integration: natural language Q&A on event data
-- **Owner:** TBD (Claude 2 for backend, Claude 1 for frontend)
-- **Status:** ROADMAP
-- **Priority:** P3 / Future
-- **Genie Room:** `01f110512fd015ada6b59c70c0ef42a6` ("DBX Demo NYC Genie"), warehouse `e5f11d721479f35a`
-- **Room URL:** `https://dbc-eca83c32-b44b.cloud.databricks.com/genie/rooms/01f110512fd015ada6b59c70c0ef42a6?o=3590757798436003`
-- **API Docs:** https://docs.databricks.com/aws/en/genie/conversation-api
-- **What it does:** Adds a chat-style Q&A box to the dashboard where users ask natural language questions about the event data ("Which borough has the most registrations?") and get answers powered by Databricks Genie
-- **Backend work (Claude 2):**
-  - `POST /genie/ask` — proxy to Genie API: start conversation → poll for completion → return results
-  - `GET /genie/result/:conv/:msg/:attachment` — fetch query results
-  - Auth: SP OAuth M2M (same SP, may need Genie room permissions granted)
-  - Rate limit: 5 queries/min/workspace — consider caching or debouncing
-- **Frontend work (Claude 1):**
-  - Chat input box on dashboard page (collapsible panel or new tab)
-  - POST question → show loading spinner → display result as table or text
-  - Suggested starter questions: "How many people registered from Brooklyn?", "What are the most popular topics?"
-- **API flow:**
-  1. `POST /api/2.0/genie/spaces/{space_id}/start-conversation` with `{"content": "<question>"}`
-  2. Poll `GET .../messages/{message_id}` every 1-5s until `status = "COMPLETED"`
-  3. Extract `attachment_id` from `attachments` array
-  4. `GET .../query-result/{attachment_id}` for up to 5,000 rows
-- **Why it's compelling:** Shows Genie as "data analyst in a box" — audience asks ad-hoc questions about their own live data. No extra infra needed.
+### Task 13 frontend — Genie chat UI on dashboard page
+- **Owner:** Claude 1
+- **Status:** TODO
+- **Priority:** P3
+- **Details:**
+  - Backend `POST /genie/ask` is DONE and deployed — accepts `{"question": "..."}`, returns `{answer, sql, columns, rows, suggested_questions}`
+  - Need: chat input box on dashboard, loading spinner, answer + data table display
+  - Suggested starter questions as clickable chips
+- **Acceptance criteria:** Users can ask natural language questions and see Genie answers on /dashboard
 
 ### Task 16 — Enhanced map: neighborhood boundaries + surrounding states
 - **Owner:** TBD (Claude 1 or Claude 3)
