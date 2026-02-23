@@ -33,3 +33,7 @@ __pycache__/
 # Databricks artifacts
 .databricks/
 app.yaml
+
+# Screenshots (move to docs/screenshots/ if needed for README)
+*.png
+!frontend/public/*.png

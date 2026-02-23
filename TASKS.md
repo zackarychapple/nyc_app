@@ -116,16 +116,9 @@
 
 ### Task 17 — Security audit: scan repo for exposed secrets and vulnerabilities
 - **Owner:** Claude 2
-- **Status:** TODO
+- **Status:** DONE
 - **Priority:** P0 (before sharing repo widely)
-- **Details:**
-  - Scan full git history for leaked passwords, secrets, connection strings
-  - Scan all current tracked files for secret patterns
-  - Verify `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, etc.
-  - Check CLAUDE.md doesn't contain actual secret values (placeholders OK)
-  - If secrets found in history: rotate credentials, update Amplify env vars, verify endpoints
-- **Preliminary finding (coordinator):** `app.yaml` was never committed. No actual secrets in tracked files or history. Full pass needed to confirm.
-- **Acceptance criteria:** No secrets in tracked files or git history. Credentials rotated if anything found.
+- **Completion notes:** Full audit passed. No secrets in tracked files or git history. See details below.
 
 ---
 
@@ -180,3 +173,5 @@
 | 10 | Add --seed flag to demo_reset.sh | Claude 2 | 2026-02-22 | `--seed` re-seeds after truncate, `-y` skips confirmation |
 | 11 | Create Databricks notebook demo reset | Claude 2 | 2026-02-22 | `databricks/notebooks/demo_reset.py` — uses UC catalog, SEED_DATA toggle |
 | 12 | Build NLP topic classification pipeline | Claude 2 | 2026-02-22 | `databricks/jobs/nlp_topic_classifier.py` — Claude Haiku via FMAPI, writes to topic_analysis + registration_topics |
+| 13 | Genie API backend endpoint | Claude 2 | 2026-02-22 | `POST /genie/ask` — proxies to Databricks Genie, returns answer + SQL + data |
+| 17 | Security audit: scan repo for secrets | Claude 2 | 2026-02-22 | Clean — no secrets in tracked files or git history. `.gitignore` covers `.env`, `app.yaml`, `.databricks/`. Updated to also exclude `*.png`. |

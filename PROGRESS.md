@@ -69,23 +69,19 @@
 - Added `POST /genie/ask` endpoint to `backend/server.js`
 - Flow: start-conversation → poll (1-3s backoff, max 60s) → fetch query-result → return combined response
 - Response: `{answer, sql, columns, rows, suggested_questions, conversation_id, message_id}`
-- Uses existing `getSpToken()` for auth (all-apis scope)
 - SP permissions: granted `CAN_RUN` on Genie space `01f110512fd015ada6b59c70c0ef42a6`, `CAN_USE` on warehouse `e5f11d721479f35a`
-- Deployed via Amplify build #28 (auto-triggered by push to main)
-- Verified on production:
-  - "How many total registrations?" → "34 registrations" with SQL + data
-  - "Which borough has the most?" → "Manhattan, 10 registrations"
+- Deployed via Amplify build #28, verified on production
 
 **Task 17: Security audit — CLEAN**
 - Scanned full git history (`git log --all -p`) for: passwords, secrets, tokens, API keys, connection strings with embedded passwords, JWT tokens, AWS keys, GitHub tokens
-- Scanned all tracked files for secret patterns (regex + targeted grep)
+- Scanned all tracked files for secret patterns
 - Verified: `app.yaml` and `.databricks/` were **never committed** to git history
 - Verified: `.env.example` contains only placeholders (no actual passwords)
 - Verified: `CLAUDE.md` uses `<password>` and `<SP_SECRET_IN_BACKEND_ENV>` placeholders — no real values
 - Verified: `scripts/demo_reset.sh` and `scripts/seed_data.sh` use OAuth token refresh — no hardcoded passwords
 - Verified: `backend/db.js` reads all credentials from `process.env` — no hardcoded values
 - `.gitignore` covers: `.env`, `.env.local`, `.env.production`, `.env.*.local`, `app.yaml`, `.databricks/`
-- Added `*.png` exclusion to `.gitignore` (untracked screenshots in repo root)
+- Added `*.png` exclusion to `.gitignore` (3 untracked screenshots were in repo root)
 - **Result: No secrets found in tracked files or git history. No credential rotation needed.**
 
 ### 2026-02-22 — Coordinator Review
