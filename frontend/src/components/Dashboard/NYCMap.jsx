@@ -222,7 +222,7 @@ function NYCMap({ registrations = [] }) {
   };
 
   return (
-    <div className="h-[300px] md:h-[450px] lg:h-[550px] w-full">
+    <div className="h-[300px] md:h-[450px] lg:h-[550px] w-full pb-12">
       <MapContainer
         center={NYC_CENTER}
         zoom={NYC_ZOOM}
