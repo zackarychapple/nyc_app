@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import neighborhoodToNtaMap from '../../data/neighborhoodToNtaMap';
 
@@ -22,6 +22,16 @@ function getStateColor(count) {
   if (count === 0) return '#E8ECF0';
   if (count <= 3) return '#C5D0DB';
   return '#8FA3B5';
+}
+
+// Fix grey tiles on direct page load — Leaflet needs a size recalc after mount
+function InvalidateSizeOnMount() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => map.invalidateSize(), 100);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
 }
 
 // Toggles states layer visibility based on zoom level
@@ -231,6 +241,7 @@ function NYCMap({ registrations = [] }) {
         scrollWheelZoom={true}
         zoomControl={true}
       >
+        <InvalidateSizeOnMount />
         <TileLayer
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
