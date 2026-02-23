@@ -128,7 +128,11 @@ function DashboardPage() {
       {/* Databricks Branding */}
       <div className="mt-8 mb-4 text-center">
         <div className="inline-flex items-center px-4 py-2 rounded-full bg-oat-medium text-xs md:text-sm text-gray-500 text-center">
-          <i className="fas fa-database mr-2 text-lava-400 flex-shrink-0"></i>
+          <img
+            src="https://cdn.bfldr.com/9AYANS2F/at/9c6z3t9c35wp88vc2t796qq9/primary-lockup-full-color-rgb.svg?format=png&crop=121%2C113%2Cx0%2Cy0&pad=4%2C0%2C9%2C12"
+            alt="Databricks"
+            className="h-4 mr-2 flex-shrink-0"
+          />
           <span>Powered by Databricks LakeBase <span className="hidden sm:inline">&amp; Unity Catalog</span></span>
         </div>
       </div>

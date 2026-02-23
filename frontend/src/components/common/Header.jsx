@@ -8,8 +8,12 @@ function Header() {
     <header className="bg-white shadow-sm border-b-2 border-lava-500">
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 md:py-5">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-xl md:text-2xl font-bold text-navy-900 no-underline">
-            DBX Demo NYC
+          <Link to="/" className="no-underline flex items-center">
+            <img
+              src="https://cdn.bfldr.com/9AYANS2F/at/9c6z3t9c35wp88vc2t796qq9/primary-lockup-full-color-rgb.svg?format=png&crop=121%2C113%2Cx0%2Cy0&pad=4%2C0%2C9%2C12"
+              alt="Databricks"
+              className="h-7 md:h-9"
+            />
           </Link>
           <nav className="flex items-center space-x-1">
             <Link

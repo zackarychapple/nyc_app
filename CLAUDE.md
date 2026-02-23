@@ -320,6 +320,7 @@ The frontend uses the same design language as [dbx4startups.com](https://dbx4sta
 - **Font:** DM Sans (400, 500, 700) from Google Fonts
 - **Icons:** Font Awesome 6
 - **Colors:** Lava (#FF7A5C / #FF5F46 / #FF3621), Navy (#1B3139 / #0B2026), Oat (#F9F7F4 / #EEEDE9)
+- **Logo:** Databricks primary lockup from CDN: `https://cdn.bfldr.com/9AYANS2F/at/9c6z3t9c35wp88vc2t796qq9/primary-lockup-full-color-rgb.svg?format=png&crop=121%2C113%2Cx0%2Cy0&pad=4%2C0%2C9%2C12`
 - **Patterns:** White cards with shadows, lava gradient heroes, rounded-xl corners, clean spacing
 
 ---

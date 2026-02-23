@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBX Demo NYC — Detailed Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: #F9F7F4; color: #1B3139; padding: 40px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h1 span { color: #FF5F46; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 40px; }
+  .diagram { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 1100px; margin: 0 auto; }
+
+  /* Nodes */
+  .layer { width: 100%; border-radius: 16px; padding: 24px 28px; position: relative; }
+  .layer h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .layer h2 .icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; flex-shrink: 0; }
+  .layer .meta { font-size: 11px; color: #888; margin-bottom: 12px; font-family: monospace; }
+
+  /* Color coding */
+  .frontend { background: white; border: 2px solid #FF5F46; }
+  .frontend h2 .icon { background: #FF5F46; }
+  .backend { background: white; border: 2px solid #1B3139; }
+  .backend h2 .icon { background: #1B3139; }
+  .lakebase { background: white; border: 2px solid #00A972; }
+  .lakebase h2 .icon { background: #00A972; }
+  .databricks { background: white; border: 2px solid #FF3621; }
+  .databricks h2 .icon { background: #FF3621; }
+
+  /* Component cards inside layers */
+  .components { display: flex; gap: 12px; flex-wrap: wrap; }
+  .comp { background: #F9F7F4; border-radius: 10px; padding: 14px 16px; flex: 1; min-width: 180px; }
+  .comp h3 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .comp p { font-size: 11px; color: #555; line-height: 1.5; }
+  .comp .tech { display: inline-block; font-size: 10px; background: #EEEDE9; border-radius: 4px; padding: 2px 6px; margin-top: 6px; color: #666; font-family: monospace; }
+
+  /* Arrows */
+  .arrow-group { display: flex; align-items: flex-start; justify-content: center; gap: 80px; padding: 0 40px; width: 100%; }
+  .arrow-col { display: flex; flex-direction: column; align-items: center; }
+  .arrow-col .shaft { width: 2px; height: 24px; background: #ccc; }
+  .arrow-col .head { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #ccc; }
+  .arrow-col .label { font-size: 10px; color: #999; font-family: monospace; margin-top: 2px; }
+  .arrow-col .head-up { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 7px solid #00A972; }
+  .arrow-col .shaft-green { width: 2px; height: 16px; background: #00A972; }
+
+  /* Data flow section */
+  .flow-section { margin-top: 48px; max-width: 1100px; margin-left: auto; margin-right: auto; }
+  .flow-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; }
+  .flow-step { background: white; border-radius: 10px; padding: 12px 16px; font-size: 12px; text-align: center; border: 1px solid #ddd; min-width: 120px; }
+  .flow-step strong { display: block; font-size: 11px; color: #FF5F46; margin-bottom: 4px; }
+  .flow-arrow { font-size: 18px; color: #ccc; padding: 0 4px; }
+
+  /* Table section */
+  .details-section { margin-top: 48px; max-width: 1100px; margin-left: auto; margin-right: auto; }
+  .details-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; }
+  th { background: #1B3139; color: white; text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 600; }
+  td { padding: 10px 14px; font-size: 12px; border-bottom: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  td code { background: #F9F7F4; padding: 2px 5px; border-radius: 3px; font-size: 11px; }
+  .endpoint { font-family: monospace; font-size: 11px; }
+  .method { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 3px; padding: 1px 5px; color: white; margin-right: 4px; }
+  .method.get { background: #00A972; }
+  .method.post { background: #FF5F46; }
+
+  /* Cost section */
+  .cost-card { background: white; border-radius: 12px; padding: 20px 24px; border: 1px solid #eee; margin-top: 16px; }
+  .cost-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #f5f5f5; }
+  .cost-row:last-child { border-bottom: none; }
+  .cost-row .val { font-weight: 600; }
+  .cost-row .val.low { color: #00A972; }
+</style>
+</head>
+<body>
+
+<h1>DBX Demo NYC <span>Detailed Architecture</span></h1>
+<p class="subtitle">dbxdemonyc.com — Complete technical reference with endpoints, auth flows, costs, and permissions</p>
+
+<!-- Main Architecture Diagram -->
+<div class="diagram">
+
+  <!-- Frontend -->
+  <div class="layer frontend">
+    <h2><span class="icon">R</span> Frontend — React + Tailwind CSS</h2>
+    <div class="meta">AWS Amplify Static &nbsp;|&nbsp; dx7u5ga7qr7e7 &nbsp;|&nbsp; dbxdemonyc.com &nbsp;|&nbsp; Route 53</div>
+    <div class="components">
+      <div class="comp">
+        <h3>Registration Flow</h3>
+        <p>4-step wizard: location type &rarr; borough/state &rarr; reason &rarr; confirmation. UUID generated client-side.</p>
+        <span class="tech">RegistrationFlow.jsx</span>
+      </div>
+      <div class="comp">
+        <h3>Live Dashboard</h3>
+        <p>NYC choropleth map (197 NTA neighborhoods + tri-state), bar chart, pie chart, responses table. Polls every 10s.</p>
+        <span class="tech">react-leaflet</span> <span class="tech">recharts</span>
+      </div>
+      <div class="comp">
+        <h3>Embedded AI/BI Dashboard</h3>
+        <p>Native Lakeview dashboard via AIBI SDK. 3-step scoped token flow. Counter, pie, area, bar, table widgets.</p>
+        <span class="tech">@databricks/aibi-client</span>
+      </div>
+      <div class="comp">
+        <h3>Genie Chat</h3>
+        <p>Natural language Q&A on event data. Starter questions, data table, SQL viewer, follow-up suggestions.</p>
+        <span class="tech">GenieChat.jsx</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrows: Frontend → Backend -->
+  <div class="arrow-group" style="height: 60px;">
+    <div class="arrow-col">
+      <div class="label" style="color: #FF5F46;">POST /registrations</div>
+      <div class="shaft" style="background: #FF5F46;"></div>
+      <div class="head" style="border-top-color: #FF5F46;"></div>
+    </div>
+    <div class="arrow-col">
+      <div class="label" style="color: #1B3139;">GET /registrations</div>
+      <div class="shaft" style="background: #1B3139;"></div>
+      <div class="head" style="border-top-color: #1B3139;"></div>
+    </div>
+    <div class="arrow-col">
+      <div class="label" style="color: #888;">GET /dashboard-token</div>
+      <div class="shaft"></div>
+      <div class="head"></div>
+    </div>
+    <div class="arrow-col">
+      <div class="label" style="color: #888;">POST /genie/ask</div>
+      <div class="shaft"></div>
+      <div class="head"></div>
+    </div>
+  </div>
+
+  <!-- Backend -->
+  <div class="layer backend">
+    <h2><span class="icon">E</span> Backend — Express.js (Node.js)</h2>
+    <div class="meta">AWS Amplify WEB_COMPUTE &nbsp;|&nbsp; d1erxf8q87xlvj &nbsp;|&nbsp; main.d1erxf8q87xlvj.amplifyapp.com</div>
+    <div class="components">
+      <div class="comp">
+        <h3>REST API</h3>
+        <p>CRUD for registrations, stats aggregation, topic results. CORS whitelist for dbxdemonyc.com + Amplify domains.</p>
+        <span class="tech">server.js</span> <span class="tech">pg (node-postgres)</span>
+      </div>
+      <div class="comp">
+        <h3>SP Token Minting</h3>
+        <p>3-step flow: all-apis token &rarr; tokeninfo &rarr; scoped embed token. Cached, auto-refreshes before expiry.</p>
+        <span class="tech">OAuth client_credentials</span>
+      </div>
+      <div class="comp">
+        <h3>Genie Proxy</h3>
+        <p>start-conversation &rarr; poll (1-3s backoff, 60s max) &rarr; query-result. Returns answer + SQL + rows + suggestions.</p>
+        <span class="tech">Conversation API</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrows: Backend → LakeBase -->
+  <div class="arrow-group" style="height: 60px;">
+    <div class="arrow-col">
+      <div class="label" style="color: #00A972;">DATABASE_URL (Postgres wire protocol)</div>
+      <div class="shaft" style="background: #00A972;"></div>
+      <div class="head" style="border-top-color: #00A972;"></div>
+    </div>
+  </div>
+
+  <!-- LakeBase -->
+  <div class="layer lakebase">
+    <h2><span class="icon">L</span> LakeBase — Managed Postgres (Autoscaling)</h2>
+    <div class="meta">Project: nyc-demo &nbsp;|&nbsp; ep-ancient-bread-d15lax3a.database.us-west-2.cloud.databricks.com &nbsp;|&nbsp; PG 17</div>
+    <div class="components">
+      <div class="comp">
+        <h3>event_registrations</h3>
+        <p>Primary write target. UUID PK, location_type, borough, neighborhood, state, reason, created_at. Indexes on borough + created_at.</p>
+        <span class="tech">READ + WRITE</span>
+      </div>
+      <div class="comp">
+        <h3>topic_analysis</h3>
+        <p>Aggregated NLP results. topic_id, topic_label, topic_count, top_words, updated_at. Written by NLP job.</p>
+        <span class="tech">READ (by backend)</span>
+      </div>
+      <div class="comp">
+        <h3>registration_topics</h3>
+        <p>Per-registration topic assignment. user_id FK, assigned_topic, confidence, updated_at. Written by NLP job.</p>
+        <span class="tech">READ (by backend)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrows: LakeBase ↔ Databricks -->
+  <div class="arrow-group" style="height: 60px;">
+    <div class="arrow-col">
+      <div class="label" style="color: #FF3621;">Registered as UC Catalog: nyc_demo_lakebase</div>
+      <div class="shaft" style="background: #FF3621;"></div>
+      <div class="head" style="border-top-color: #FF3621;"></div>
+    </div>
+    <div class="arrow-col">
+      <div class="label" style="color: #00A972;">NLP writes back via spark.sql()</div>
+      <div class="head-up"></div>
+      <div class="shaft-green"></div>
+    </div>
+  </div>
+
+  <!-- Databricks -->
+  <div class="layer databricks">
+    <h2><span class="icon">D</span> Databricks Lakehouse</h2>
+    <div class="meta">Workspace: dbc-eca83c32-b44b.cloud.databricks.com &nbsp;|&nbsp; SQL Warehouse: 00561e6c134511ad (Serverless, auto-stop 10m)</div>
+    <div class="components">
+      <div class="comp">
+        <h3>Unity Catalog</h3>
+        <p>Catalog <code>nyc_demo_lakebase</code> (MANAGED_ONLINE_CATALOG) federates queries to LakeBase Postgres. Dashboard + NLP read through UC.</p>
+        <span class="tech">Federated queries</span>
+      </div>
+      <div class="comp">
+        <h3>AI/BI Dashboard (Lakeview)</h3>
+        <p>5 widgets: counter, pie, area chart, bar chart, table. Queries event_registrations via UC. Published + embedded via AIBI SDK.</p>
+        <span class="tech">ID: 01f1103d...987e10</span>
+      </div>
+      <div class="comp">
+        <h3>NLP Topic Classifier</h3>
+        <p>Foundation Model API (Claude Haiku). Zero-shot classification into 8 topics. Reads registrations, writes topic_analysis + registration_topics back to LakeBase.</p>
+        <span class="tech">databricks-claude-haiku-4-5</span>
+      </div>
+      <div class="comp">
+        <h3>Genie Room</h3>
+        <p>"DBX Demo NYC Genie" — NL Q&A on event data. SP has CAN_RUN. Backend proxies via Conversation API.</p>
+        <span class="tech">Space: 01f110...42a6</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Data Flow -->
+<div class="flow-section">
+  <h2>Data Flow</h2>
+  <div class="flow">
+    <div class="flow-step"><strong>1. User</strong>Submits registration<br>at dbxdemonyc.com</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step"><strong>2. Frontend</strong>POST /registrations<br>with UUID + form data</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step"><strong>3. Backend</strong>Express validates<br>+ INSERT via pg</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step"><strong>4. LakeBase</strong>Postgres stores row<br>in event_registrations</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step"><strong>5. Unity Catalog</strong>Federated catalog<br>exposes to Lakehouse</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step"><strong>6. Dashboard</strong>SQL Warehouse queries<br>UC &rarr; renders charts</div>
+  </div>
+  <div class="flow" style="margin-top: 16px;">
+    <div class="flow-step"><strong>7. NLP Job</strong>Reads via UC<br>classifies with FMAPI</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step"><strong>8. LakeBase</strong>Writes topics back<br>to topic_analysis</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step"><strong>9. Backend</strong>GET /topics<br>reads NLP results</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step"><strong>10. Frontend</strong>Displays topic<br>breakdown to user</div>
+  </div>
+</div>
+
+<!-- API Endpoints -->
+<div class="details-section">
+  <h2>API Endpoints</h2>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th><th>Connects to</th></tr>
+    <tr>
+      <td class="endpoint"><span class="method get">GET</span>/health</td>
+      <td>DB connectivity check</td>
+      <td>LakeBase (SELECT 1)</td>
+    </tr>
+    <tr>
+      <td class="endpoint"><span class="method post">POST</span>/registrations</td>
+      <td>Insert new registration</td>
+      <td>LakeBase &rarr; event_registrations</td>
+    </tr>
+    <tr>
+      <td class="endpoint"><span class="method get">GET</span>/registrations</td>
+      <td>All registrations (dashboard polling, 10s)</td>
+      <td>LakeBase &rarr; event_registrations</td>
+    </tr>
+    <tr>
+      <td class="endpoint"><span class="method get">GET</span>/registrations/stats</td>
+      <td>Aggregated borough/neighborhood counts</td>
+      <td>LakeBase &rarr; event_registrations</td>
+    </tr>
+    <tr>
+      <td class="endpoint"><span class="method get">GET</span>/topics</td>
+      <td>NLP topic analysis results</td>
+      <td>LakeBase &rarr; topic_analysis</td>
+    </tr>
+    <tr>
+      <td class="endpoint"><span class="method get">GET</span>/dashboard-token</td>
+      <td>Scoped embed token (3-step SP flow)</td>
+      <td>Databricks OIDC + Lakeview API</td>
+    </tr>
+    <tr>
+      <td class="endpoint"><span class="method post">POST</span>/genie/ask</td>
+      <td>Natural language Q&A (5-15s response)</td>
+      <td>Databricks Genie Conversation API</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Auth Flow -->
+<div class="details-section">
+  <h2>Authentication Flows</h2>
+  <table>
+    <tr><th>Flow</th><th>Method</th><th>Details</th></tr>
+    <tr>
+      <td>Backend &rarr; LakeBase</td>
+      <td><code>DATABASE_URL</code></td>
+      <td>Native PG role <code>nyc_app</code> with password. SSL required. Connection pool (max 10, 30s idle).</td>
+    </tr>
+    <tr>
+      <td>Backend &rarr; LakeBase (local dev)</td>
+      <td>Databricks OAuth</td>
+      <td>CLI profile <code>dbc-eca83c32-b44b</code>, auto-refresh token as PG password function.</td>
+    </tr>
+    <tr>
+      <td>Dashboard embed token</td>
+      <td>SP OAuth (3-step)</td>
+      <td>1. <code>POST /oidc/v1/token</code> (client credentials) &rarr; 2. <code>GET /lakeview/.../tokeninfo</code> &rarr; 3. Exchange for scoped embed token. SP: <code>nyc-demo-dashboard-embed</code>.</td>
+    </tr>
+    <tr>
+      <td>Genie API</td>
+      <td>SP OAuth (all-apis)</td>
+      <td>Same SP. <code>CAN_RUN</code> on Genie space, <code>CAN_USE</code> on warehouse <code>e5f11d721479f35a</code>.</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Infrastructure Costs -->
+<div class="details-section">
+  <h2>Infrastructure Costs (Observed)</h2>
+  <div class="cost-card">
+    <div class="cost-row"><span>Databricks SQL Warehouse (Serverless, auto-stop 10m)</span><span class="val low">~$1-2/day active</span></div>
+    <div class="cost-row"><span>Databricks Jobs Serverless (NLP classifier runs)</span><span class="val low">~$1/day when run</span></div>
+    <div class="cost-row"><span>LakeBase Autoscaling compute</span><span class="val low">~$0.07-0.18/day</span></div>
+    <div class="cost-row"><span>Databricks Storage</span><span class="val low">~$0.01/day</span></div>
+    <div class="cost-row"><span>AWS Amplify (Static + WEB_COMPUTE)</span><span class="val low">&lt;$5/mo</span></div>
+    <div class="cost-row"><span>AWS Route 53</span><span class="val low">~$1/mo</span></div>
+    <div class="cost-row" style="border-top: 2px solid #eee; margin-top: 4px; padding-top: 10px;"><span><strong>Total (active day)</strong></span><span class="val">~$3-5/day</span></div>
+    <div class="cost-row"><span><strong>Total (idle / overnight)</strong></span><span class="val low">~$0.10/day</span></div>
+  </div>
+</div>
+
+<!-- Service Principal Permissions -->
+<div class="details-section" style="margin-bottom: 60px;">
+  <h2>Service Principal Permissions</h2>
+  <table>
+    <tr><th>Resource</th><th>Permission</th><th>Purpose</th></tr>
+    <tr><td>SQL Warehouse <code>00561e6c134511ad</code></td><td>CAN_USE</td><td>Dashboard queries</td></tr>
+    <tr><td>Dashboard <code>01f1103d...987e10</code></td><td>CAN_RUN</td><td>Embed + execute</td></tr>
+    <tr><td>Catalog <code>nyc_demo_lakebase</code></td><td>USE CATALOG</td><td>Access LakeBase via UC</td></tr>
+    <tr><td>Schema <code>nyc_demo_lakebase.public</code></td><td>USE SCHEMA</td><td>Query tables</td></tr>
+    <tr><td>Table <code>event_registrations</code></td><td>SELECT</td><td>Read registrations</td></tr>
+    <tr><td>Table <code>topic_analysis</code></td><td>SELECT</td><td>Read NLP results</td></tr>
+    <tr><td>Table <code>registration_topics</code></td><td>SELECT</td><td>Read per-registration topics</td></tr>
+    <tr><td>Genie Space <code>01f110...42a6</code></td><td>CAN_RUN</td><td>Execute Genie queries</td></tr>
+    <tr><td>Genie Warehouse <code>e5f11d721479f35a</code></td><td>CAN_USE</td><td>Genie query execution</td></tr>
+  </table>
+</div>
+
+</body>
+</html>

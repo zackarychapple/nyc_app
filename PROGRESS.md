@@ -175,3 +175,26 @@
 - Live at dbxdemonyc.com with full end-to-end flow
 - No secrets in repo (security audit clean)
 - README ready for open-source sharing
+
+### 2026-02-22 — Coordinator (Session 2: Architecture Docs + Wrap-up)
+
+**Task 19: Architecture diagrams created**
+- `docs/architecture.html` — Presentable reference architecture (slide-style)
+  - Horizontal columnar layout: Serve > Process > Store > Govern & Query > Analyse & AI
+  - Color-coded component boxes (Databricks=lava, LakeBase=green, App Code=blue, AWS=navy)
+  - External users on left with SVG arrows, "Databricks Data Intelligence Platform + AWS" banner
+  - Data flow strip, legend with color key
+  - Designed to match Databricks reference architecture style
+- `docs/architecture_detailed.html` — Deep technical reference
+  - Vertical stacked layout with full API endpoints, auth flows, cost breakdown, SP permissions
+  - Complete infrastructure details for any engineer to understand the system
+
+**Task 20: Databricks branding (by Claude 3)**
+- Header logo replaced with official Databricks lockup from CDN
+- Dashboard "Powered by" section uses logo instead of Font Awesome icon
+- Logo CDN URL added to CLAUDE.md design system section
+
+**End-of-day state:**
+- 20 tasks completed total (18 from session 1 + 2 from session 2)
+- All changes committed and pushed to main
+- Backlog remaining: topic-colored choropleth, teardown script

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBX Demo NYC — Reference Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #ffffff;
+    color: #1B3139;
+    padding: 48px 40px;
+    min-width: 1200px;
+  }
+
+  /* Header */
+  .header {
+    max-width: 1400px;
+    margin: 0 auto 32px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1B3139;
+    margin-bottom: 6px;
+  }
+  .header h1 span { color: #FF3621; }
+  .header .subtitle {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  .header .url {
+    font-size: 13px;
+    color: #999;
+    font-family: 'DM Sans', monospace;
+  }
+
+  /* Main architecture container */
+  .arch-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* Platform border (like the green Databricks border) */
+  .platform-wrap {
+    border: 3px solid #FF3621;
+    border-radius: 20px;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .platform-label {
+    background: #FF3621;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  /* Column flow layout */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: 180px 200px 220px 260px 260px;
+    gap: 0;
+    padding: 0;
+    min-height: 520px;
+  }
+
+  /* Each column */
+  .flow-col {
+    border-right: 1px solid #f0ebe6;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .flow-col:last-child { border-right: none; }
+
+  .col-header {
+    text-align: center;
+    padding: 14px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #1B3139;
+    background: #F9F7F4;
+    border-bottom: 2px solid #EEEDE9;
+  }
+
+  .col-body {
+    flex: 1;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #FEFDFB;
+  }
+
+  /* Component boxes */
+  .box {
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.45;
+    position: relative;
+    transition: transform 0.15s ease;
+  }
+  .box:hover { transform: translateY(-1px); }
+  .box .box-title {
+    font-weight: 700;
+    font-size: 12px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .box .box-title .icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+  .box .box-detail {
+    font-size: 10.5px;
+    color: #555;
+    line-height: 1.4;
+  }
+  .box .box-tech {
+    display: inline-block;
+    font-size: 9.5px;
+    border-radius: 3px;
+    padding: 1px 5px;
+    margin-top: 5px;
+    font-family: 'DM Sans', monospace;
+  }
+
+  /* Databricks components — lava */
+  .box.dbx {
+    background: #FFF3F0;
+    border: 1.5px solid #FFCCC2;
+  }
+  .box.dbx .icon { background: #FF3621; }
+  .box.dbx .box-tech { background: #FFE8E3; color: #CC2B1A; }
+
+  /* LakeBase — green */
+  .box.lakebase {
+    background: #F0FFF8;
+    border: 1.5px solid #B3E6D0;
+  }
+  .box.lakebase .icon { background: #00A972; }
+  .box.lakebase .box-tech { background: #D9F5EA; color: #007A52; }
+
+  /* AWS / 3rd party — navy */
+  .box.aws {
+    background: #F4F7F9;
+    border: 1.5px solid #C8D5DB;
+  }
+  .box.aws .icon { background: #1B3139; }
+  .box.aws .box-tech { background: #E2E8EB; color: #1B3139; }
+
+  /* App code — blue */
+  .box.app {
+    background: #F0F4FF;
+    border: 1.5px solid #C2D0F0;
+  }
+  .box.app .icon { background: #3B6CF5; }
+  .box.app .box-tech { background: #E0E8FC; color: #2850C8; }
+
+  /* Arrows between columns */
+  .arrow-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* External sources (left side) */
+  .sources-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .source-row {
+    display: grid;
+    grid-template-columns: 200px auto;
+    gap: 24px;
+    align-items: center;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 28px;
+    padding: 20px 0;
+    margin-top: 28px;
+    border-top: 1px solid #eee;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #555;
+  }
+  .legend-swatch {
+    width: 24px;
+    height: 16px;
+    border-radius: 4px;
+  }
+  .legend-swatch.sw-dbx { background: #FFF3F0; border: 1.5px solid #FFCCC2; }
+  .legend-swatch.sw-lb { background: #F0FFF8; border: 1.5px solid #B3E6D0; }
+  .legend-swatch.sw-aws { background: #F4F7F9; border: 1.5px solid #C8D5DB; }
+  .legend-swatch.sw-app { background: #F0F4FF; border: 1.5px solid #C2D0F0; }
+
+  /* User / external column */
+  .external-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding: 32px 20px;
+    min-width: 160px;
+  }
+  .ext-card {
+    background: white;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .ext-card .ext-icon { font-size: 24px; margin-bottom: 6px; }
+  .ext-card .ext-label { font-size: 12px; font-weight: 600; }
+  .ext-card .ext-sub { font-size: 10px; color: #888; }
+
+  /* Top-level layout: external + platform */
+  .top-layout {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+  }
+  .top-external {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+    padding: 40px 24px 40px 0;
+    min-width: 170px;
+  }
+
+  /* Connection arrows (SVG-based) */
+  .conn-area {
+    flex-shrink: 0;
+    width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .conn-area svg { overflow: visible; }
+
+  /* Data flow strip */
+  .flow-strip {
+    max-width: 1400px;
+    margin: 28px auto 0;
+    background: #F9F7F4;
+    border-radius: 14px;
+    padding: 20px 28px;
+  }
+  .flow-strip h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .flow-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .flow-step {
+    background: white;
+    border-radius: 10px;
+    padding: 10px 14px;
+    min-width: 120px;
+    text-align: center;
+    border: 1px solid #eee;
+    flex-shrink: 0;
+  }
+  .flow-step .step-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: #FF3621;
+    margin-bottom: 3px;
+  }
+  .flow-step .step-text {
+    font-size: 11px;
+    color: #333;
+    line-height: 1.4;
+  }
+  .flow-chevron {
+    font-size: 16px;
+    color: #ccc;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* Footer */
+  .footer {
+    max-width: 1400px;
+    margin: 40px auto 0;
+    text-align: center;
+    color: #bbb;
+    font-size: 11px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>DBX Demo NYC <span>Reference Architecture</span></h1>
+  <p class="subtitle">Live event registration app demonstrating Databricks as a complete application platform</p>
+  <p class="url">dbxdemonyc.com &mdash; Built with LakeBase, Unity Catalog, AI/BI Dashboards, Foundation Model APIs, and Genie</p>
+</div>
+
+<!-- Main Architecture -->
+<div class="arch-container">
+  <div class="top-layout">
+
+    <!-- External Sources (left) -->
+    <div class="top-external">
+      <div class="ext-card">
+        <div class="ext-icon">&#x1F4F1;</div>
+        <div class="ext-label">Event Attendees</div>
+        <div class="ext-sub">Phone / Laptop browser</div>
+      </div>
+      <div class="ext-card">
+        <div class="ext-icon">&#x1F3A4;</div>
+        <div class="ext-label">Presenter</div>
+        <div class="ext-sub">Live dashboard demo</div>
+      </div>
+    </div>
+
+    <!-- Connection arrows -->
+    <div class="conn-area">
+      <svg width="48" height="200" viewBox="0 0 48 200">
+        <defs>
+          <marker id="arrowRight" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#ccc"/>
+          </marker>
+        </defs>
+        <line x1="0" y1="60" x2="44" y2="60" stroke="#ccc" stroke-width="2" marker-end="url(#arrowRight)"/>
+        <text x="22" y="52" text-anchor="middle" font-size="8" fill="#999" font-family="DM Sans">HTTPS</text>
+        <line x1="0" y1="140" x2="44" y2="140" stroke="#ccc" stroke-width="2" marker-end="url(#arrowRight)"/>
+        <text x="22" y="132" text-anchor="middle" font-size="8" fill="#999" font-family="DM Sans">HTTPS</text>
+      </svg>
+    </div>
+
+    <!-- Platform Border -->
+    <div class="platform-wrap" style="flex: 1;">
+      <div class="platform-label">Databricks Data Intelligence Platform + AWS</div>
+
+      <div class="flow-grid">
+        <!-- Column 1: Serve / Frontend -->
+        <div class="flow-col">
+          <div class="col-header">Serve</div>
+          <div class="col-body">
+            <div class="box app">
+              <div class="box-title"><span class="icon">R</span>React Frontend</div>
+              <div class="box-detail">4-step registration wizard + live dashboard with map, charts, Genie chat</div>
+              <span class="box-tech">CRA + Tailwind</span>
+            </div>
+            <div class="box aws">
+              <div class="box-title"><span class="icon">A</span>Amplify Static</div>
+              <div class="box-detail">CDN-hosted SPA, Route 53 custom domain</div>
+              <span class="box-tech">dx7u5ga7qr7e7</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Process / Backend -->
+        <div class="flow-col">
+          <div class="col-header">Process</div>
+          <div class="col-body">
+            <div class="box app">
+              <div class="box-title"><span class="icon">E</span>Express.js API</div>
+              <div class="box-detail">REST endpoints, CORS, SP token minting (3-step), Genie proxy</div>
+              <span class="box-tech">server.js + pg</span>
+            </div>
+            <div class="box aws">
+              <div class="box-title"><span class="icon">A</span>Amplify Compute</div>
+              <div class="box-detail">WEB_COMPUTE runtime, public (no auth wall)</div>
+              <span class="box-tech">d1erxf8q87xlvj</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Store / LakeBase -->
+        <div class="flow-col">
+          <div class="col-header">Store</div>
+          <div class="col-body">
+            <div class="box lakebase">
+              <div class="box-title"><span class="icon">L</span>LakeBase</div>
+              <div class="box-detail">Managed Postgres (Autoscaling). Primary OLTP data store for real-time reads and writes.</div>
+              <span class="box-tech">PG 17 &bull; nyc-demo</span>
+            </div>
+            <div class="box lakebase" style="opacity: 0.85;">
+              <div class="box-title" style="font-size: 11px;">event_registrations</div>
+              <div class="box-detail">UUID PK, location, borough, neighborhood, state, reason, created_at</div>
+            </div>
+            <div class="box lakebase" style="opacity: 0.85;">
+              <div class="box-title" style="font-size: 11px;">topic_analysis</div>
+              <div class="box-detail">NLP results: topic_label, count, top_words</div>
+            </div>
+            <div class="box lakebase" style="opacity: 0.85;">
+              <div class="box-title" style="font-size: 11px;">registration_topics</div>
+              <div class="box-detail">Per-registration topic + confidence</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 4: Govern / Unity Catalog -->
+        <div class="flow-col">
+          <div class="col-header">Govern &amp; Query</div>
+          <div class="col-body">
+            <div class="box dbx">
+              <div class="box-title"><span class="icon">UC</span>Unity Catalog</div>
+              <div class="box-detail">Federated catalog <code>nyc_demo_lakebase</code> exposes LakeBase tables to Lakehouse compute</div>
+              <span class="box-tech">MANAGED_ONLINE_CATALOG</span>
+            </div>
+            <div class="box dbx">
+              <div class="box-title"><span class="icon">W</span>SQL Warehouse</div>
+              <div class="box-detail">Serverless starter warehouse. Powers dashboard queries + Genie</div>
+              <span class="box-tech">Auto-stop 10min</span>
+            </div>
+            <div class="box dbx">
+              <div class="box-title"><span class="icon">SP</span>Service Principal</div>
+              <div class="box-detail">nyc-demo-dashboard-embed. OAuth client credentials for embed tokens + Genie</div>
+              <span class="box-tech">CAN_RUN, CAN_USE, SELECT</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 5: Analyse & AI -->
+        <div class="flow-col">
+          <div class="col-header">Analyse &amp; AI</div>
+          <div class="col-body">
+            <div class="box dbx">
+              <div class="box-title"><span class="icon">D</span>AI/BI Dashboard</div>
+              <div class="box-detail">Lakeview dashboard embedded via AIBI SDK. Counter, pie, area, bar, table widgets. Live refresh.</div>
+              <span class="box-tech">@databricks/aibi-client</span>
+            </div>
+            <div class="box dbx">
+              <div class="box-title"><span class="icon">G</span>Genie Room</div>
+              <div class="box-detail">Natural language Q&A on event data. Conversation API proxied through backend.</div>
+              <span class="box-tech">NL-to-SQL</span>
+            </div>
+            <div class="box dbx">
+              <div class="box-title"><span class="icon">AI</span>NLP Classifier</div>
+              <div class="box-detail">Foundation Model API (Claude Haiku). Zero-shot topic classification into 8 categories.</div>
+              <span class="box-tech">FMAPI</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /platform-wrap -->
+  </div><!-- /top-layout -->
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch sw-dbx"></div>Databricks Platform</div>
+  <div class="legend-item"><div class="legend-swatch sw-lb"></div>LakeBase (Managed Postgres)</div>
+  <div class="legend-item"><div class="legend-swatch sw-app"></div>Application Code</div>
+  <div class="legend-item"><div class="legend-swatch sw-aws"></div>AWS Infrastructure</div>
+  <div class="legend-item" style="margin-left: auto; color: #999; font-size: 11px;">
+    &#9654; Data flows left to right: User &rarr; Serve &rarr; Process &rarr; Store &rarr; Govern &rarr; Analyse
+  </div>
+</div>
+
+<!-- Data Flow Strip -->
+<div class="flow-strip">
+  <h3>Data Flow: Registration &rarr; Insight</h3>
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <div class="step-text">User submits<br>registration</div>
+    </div>
+    <div class="flow-chevron">&#x276F;</div>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <div class="step-text">React POSTs<br>to Express API</div>
+    </div>
+    <div class="flow-chevron">&#x276F;</div>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <div class="step-text">INSERT into<br>LakeBase PG</div>
+    </div>
+    <div class="flow-chevron">&#x276F;</div>
+    <div class="flow-step">
+      <div class="step-num">4</div>
+      <div class="step-text">UC federates<br>to Lakehouse</div>
+    </div>
+    <div class="flow-chevron">&#x276F;</div>
+    <div class="flow-step">
+      <div class="step-num">5</div>
+      <div class="step-text">AI/BI Dashboard<br>queries via SQL WH</div>
+    </div>
+    <div class="flow-chevron">&#x276F;</div>
+    <div class="flow-step">
+      <div class="step-num">6</div>
+      <div class="step-text">NLP classifies<br>via FMAPI</div>
+    </div>
+    <div class="flow-chevron">&#x276F;</div>
+    <div class="flow-step">
+      <div class="step-num">7</div>
+      <div class="step-text">Topics written<br>back to LakeBase</div>
+    </div>
+    <div class="flow-chevron">&#x276F;</div>
+    <div class="flow-step">
+      <div class="step-num">8</div>
+      <div class="step-text">Dashboard shows<br>live insights</div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  DBX Demo NYC &mdash; Built with Databricks + Claude Code &mdash; github.com/jneil17/nyc_app
+  <br><span style="font-size: 10px;">For detailed endpoints, auth flows, costs, and SP permissions see <a href="architecture_detailed.html" style="color: #FF5F46;">architecture_detailed.html</a></span>
+</div>
+
+</body>
+</html>

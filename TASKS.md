@@ -48,8 +48,9 @@ _No active tasks. All P0/P1 work is complete. See backlog for future enhancement
 | 13 | Genie API backend endpoint | Claude 2 | 2026-02-22 | `POST /genie/ask` — proxies to Databricks Genie, returns answer + SQL + data |
 | 14 | Polish registration flow visual design | Claude 3 | 2026-02-22 | Hover states, lava accents, transitions, character count, design system consistency |
 | 15 | Polish dashboard page layout and spacing | Claude 3 | 2026-02-22 | Stats bar balanced, consistent section gaps, clean table styling, professional layout |
-| 17 | Security audit: scan repo for secrets | Claude 1 | 2026-02-22 | Clean — no secrets in tracked files or git history. `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, `*.png`. |
 | 16 | Enhanced map: neighborhood boundaries + surrounding states | Claude 1 | 2026-02-22 | 3-layer map: 197 NTA neighborhoods + borough outlines + tri-state. `neighborhoodToNtaMap.js`, `surrounding_states.geojson` |
-| 13f | Genie chat UI on dashboard | Claude 1 | 2026-02-22 | `GenieChat.jsx` — input, starter questions, data table, SQL viewer, follow-ups |
-| 16 | Enhanced map: neighborhoods + states | Claude 1 | 2026-02-22 | 3-layer map: 197 NTA neighborhoods + borough outlines + tri-state |
+| 17 | Security audit: scan repo for secrets | Claude 1 | 2026-02-22 | Clean — no secrets in tracked files or git history. `.gitignore` covers `.env`, `app.yaml`, `.databricks/`, `*.png`. |
 | 18 | Write comprehensive README | Claude 1 | 2026-02-22 | Architecture diagram, tech stack, getting started, deployment, API reference, demo playbook |
+| 13f | Genie chat UI on dashboard | Claude 1 | 2026-02-22 | `GenieChat.jsx` — input, starter questions, data table, SQL viewer, follow-ups |
+| 19 | Architecture diagrams (presentable + detailed) | Coordinator | 2026-02-22 | `docs/architecture.html` (slide-style reference arch) + `docs/architecture_detailed.html` (deep technical) |
+| 20 | Databricks logo branding | Claude 3 | 2026-02-22 | Header + Dashboard "Powered by" use official Databricks logo from CDN |
