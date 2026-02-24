@@ -198,3 +198,47 @@
 - 20 tasks completed total (18 from session 1 + 2 from session 2)
 - All changes committed and pushed to main
 - Backlog remaining: topic-colored choropleth, teardown script
+
+### 2026-02-24 — Codex (Stack Migration)
+
+**Backend migrated: Express -> Hono on Cloudflare Workers**
+- Replaced `backend/server.js` + `backend/db.js` with worker entry: `backend/src/index.ts`
+- Implemented same API surface in Hono:
+  - `GET /health`
+  - `POST /registrations`
+  - `GET /registrations`
+  - `GET /registrations/stats`
+  - `GET /topics`
+  - `GET /dashboard-token`
+  - `POST /genie/ask`
+- Preserved Databricks 3-step dashboard token flow + Genie conversation polling flow
+- Added worker runtime config:
+  - `backend/wrangler.jsonc`
+  - `backend/tsconfig.json`
+  - `backend/.dev.vars.example`
+- Verified: `pnpm --filter nyc-demo-backend typecheck` passes
+
+**Frontend migrated: CRA -> TanStack Start SSR (Cloudflare adapter)**
+- Replaced CRA app shell/router with TanStack Start:
+  - `frontend/src/routes/__root.tsx`
+  - `frontend/src/routes/index.tsx`
+  - `frontend/src/routes/dashboard.tsx`
+  - `frontend/src/router.tsx`
+  - `frontend/vite.config.ts`
+  - `frontend/wrangler.jsonc`
+- Removed old CRA entry points:
+  - `frontend/src/index.js`
+  - `frontend/src/index.css`
+  - `frontend/src/App.js`
+- Kept existing UI/features (registration flow, dashboard, map, charts, embed, Genie chat)
+- Updated navigation and in-app links to TanStack Router (`@tanstack/react-router`)
+- Updated API env usage from `REACT_APP_API_URL` -> `VITE_API_URL`
+- Added Tailwind v4 theme tokens for existing lava/navy/oat utility classes in `frontend/src/styles.css`
+- Verified:
+  - `pnpm --filter frontend lint` passes
+  - `pnpm --filter frontend build` passes (client + SSR)
+
+**Workspace updates**
+- Updated root scripts + package metadata for new runtime model
+- Updated `.env.example` for Worker vars + `VITE_API_URL`
+- Updated README sections for Cloudflare + TanStack Start + Hono stack
